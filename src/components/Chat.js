@@ -27,7 +27,8 @@ class Chat extends React.Component {
 		api.onReceiveMessage((err, message) => {
 			this.receiveMessage(message);
 		});
-		api.authenticate(window.location.search.substr(1), "users_pass", "dargon_drawing_room");
+		const user = (window.location.search && window.location.search.substr(1)) || "user";
+		api.authenticate(user, "users_pass", "dargon_drawing_room");
 	}
 	componentDidUpdate() {
 		if(this.queuedScrollDown) {
