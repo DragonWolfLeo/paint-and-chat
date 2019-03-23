@@ -1,8 +1,15 @@
 import React from "react";
 
 class CanvasSpace extends React.Component{
+	constructor(props){
+		super(props);
+		this.state = {
+			zoom: 0,
+		}
+	}
 	drawing = false;
 	prevPosition = null;
+	// Events
 	onMouseMove = event => {
 		if(!this.drawing) {
 			return;
@@ -27,9 +34,10 @@ class CanvasSpace extends React.Component{
 	getMousePosition = event => {
 		// Get mouse location
 		const rect = this.refs.canvas.getBoundingClientRect();
+		const scale = this.getScale();
 		const x = event.clientX - rect.x;
 		const y = event.clientY - rect.y;
-		return [x, y];
+		return [x/scale, y/scale];
 	}
 	onMouseDown = event => {
 		this.prevPosition = this.getMousePosition(event);
@@ -38,19 +46,39 @@ class CanvasSpace extends React.Component{
 	onMouseUp = () => {
 		this.drawing = false;
 	}
+	onWheel = event => {
+		// Only if ctrl is held
+		if(!event.ctrlKey) return;
+
+		event.preventDefault(); // Prevent scrolling
+		const delta = event.deltaY/30;
+		this.setState(prevState=>{
+			return {zoom: prevState.zoom + delta}
+		})
+	}
+	// Lifecycle hooks
 	componentDidMount(){
 		document.body.onmousemove = this.onMouseMove;
 		document.body.onmouseup = this.onMouseUp;
 	}
+	// Other functions
+	getScale = () => {
+		return 2**this.state.zoom;
+	}
 	render(){
 		return (
-			<div className="canvasWindow">
+			<div className="canvasWindow"
+				onMouseDown={this.onMouseDown}
+				onWheel={this.onWheel}		
+			>
 				<div className="canvasSpace bg-gray">
 					<canvas 
+						style={{
+							transform: `scale(${this.getScale()})`
+						}}
 						ref="canvas" 
 						width={400} 
 						height={400} 
-						onMouseDown={this.onMouseDown} 
 					/>
 				</div>
 			</div>
