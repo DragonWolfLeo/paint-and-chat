@@ -4,6 +4,8 @@ class CanvasSpace extends React.Component{
 	constructor(props){
 		super(props);
 		this.state = {
+			nativeWidth: 400,
+			nativeHeight: 400,
 			zoom: 0,
 		}
 	}
@@ -55,6 +57,13 @@ class CanvasSpace extends React.Component{
 		this.setState(prevState=>{
 			return {zoom: prevState.zoom + delta}
 		})
+	
+		// TODO: Get window to scroll towards the position of the mouse
+		// const e = {...event};
+		// console.log(e.clientX, e.clientY, e.currentTarget.scrollLeftMax, e.currentTarget.scrollTopMax);
+		// const {currentTarget: target} = event;
+		// target.scrollLeft = target.scrollLeftMax;
+		// target.scrollTop = target.scrollTopMax;
 	}
 	// Lifecycle hooks
 	componentDidMount(){
@@ -66,6 +75,8 @@ class CanvasSpace extends React.Component{
 		return 2**this.state.zoom;
 	}
 	render(){
+		const {nativeWidth, nativeHeight} = this.state;
+		const scale = this.getScale();
 		return (
 			<div className="canvasWindow"
 				onMouseDown={this.onMouseDown}
@@ -74,11 +85,12 @@ class CanvasSpace extends React.Component{
 				<div className="canvasSpace bg-gray">
 					<canvas 
 						style={{
-							transform: `scale(${this.getScale()})`
+							width: nativeWidth * scale,
+							height: nativeHeight * scale,
 						}}
 						ref="canvas" 
-						width={400} 
-						height={400} 
+						width={nativeWidth} 
+						height={nativeHeight} 
 					/>
 				</div>
 			</div>
