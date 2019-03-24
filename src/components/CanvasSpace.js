@@ -13,25 +13,33 @@ class CanvasSpace extends React.Component{
 	prevPosition = null;
 	// Events
 	onMouseMove = event => {
+		if (!this.prevPosition) {
+			// Save previous position
+			this.prevPosition = this.getMousePosition(event);
+			return;
+		}
+		// Pan or draw line
+		(event.ctrlKey ? this.pan : this.drawLine)(this.getMousePosition(event));
+	}
+	drawLine = pos => {
 		if(!this.drawing) {
 			return;
-		} else if (!this.prevPosition) {
-			this.prevPosition = this.getMousePosition(event);
 		}
-
-		const currentPosition = this.getMousePosition(event);
 		const {canvas} = this.refs;
 		const ctx = canvas.getContext("2d");
 
 		// Draw a line
 		ctx.fillStyle = "#000000";
 		ctx.beginPath();
-		ctx.moveTo(...currentPosition);
+		ctx.moveTo(...pos);
 		ctx.lineTo(...this.prevPosition);
 		ctx.stroke();
 
 		// Save current position as current
-		this.prevPosition = currentPosition;
+		this.prevPosition = pos;
+	}
+	pan = pos => {
+		console.log("This should be panning");
 	}
 	getMousePosition = event => {
 		// Get mouse location
@@ -60,10 +68,12 @@ class CanvasSpace extends React.Component{
 	
 		// TODO: Get window to scroll towards the position of the mouse
 		// const e = {...event};
-		// console.log(e.clientX, e.clientY, e.currentTarget.scrollLeftMax, e.currentTarget.scrollTopMax);
-		// const {currentTarget: target} = event;
-		// target.scrollLeft = target.scrollLeftMax;
-		// target.scrollTop = target.scrollTopMax;
+		// // console.log(e.clientX/e.currentTarget.clientWidth)
+		// // console.log(e);
+		// // console.log(e.clientX, e.clientY, e.currentTarget.scrollLeftMax, e.currentTarget.scrollTopMax);
+		// const {currentTarget: target} = e;
+		// target.scrollLeft = target.scrollLeftMax*(e.clientX/e.currentTarget.clientWidth);
+		// target.scrollTop = target.scrollTopMax*(e.clientY/e.currentTarget.clientHeight);
 	}
 	// Lifecycle hooks
 	componentDidMount(){
