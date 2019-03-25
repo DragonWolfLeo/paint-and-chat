@@ -35,7 +35,6 @@ class CanvasSpace extends React.Component{
 	// Events
 	onMouseMove = event => {
 		// Pan or draw line
-		// (this.keyIsPressed[KEY.SPACE] ? this.onPan : this.onDrawLine)(event);
 		(()=>{
 			if(this.keyIsPressed[KEY.SPACE] && this.mouseIsPressed[MOUSE.LEFT]){
 				return this.onPan;
@@ -139,7 +138,6 @@ class CanvasSpace extends React.Component{
 		document.body.onmouseup = this.onMouseUp;
 		document.body.onkeydown = this.onKeyDown;
 		document.body.onkeyup = this.onKeyUp;
-		document.body.oncontextmenu = this.onContextMenu;
 
 		// const {canvasSpace} = this.refs;
 		// console.log(canvasSpace.clientHeight);
@@ -156,6 +154,7 @@ class CanvasSpace extends React.Component{
 				ref="canvasWindow"
 				onMouseDown={this.onMouseDown}
 				onWheel={this.onWheel}		
+				onContextMenu={this.onContextMenu}
 			>
 				<div className="canvasSpace bg-gray"
 					ref="canvasSpace"
