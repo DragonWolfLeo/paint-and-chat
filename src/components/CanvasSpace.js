@@ -5,8 +5,15 @@ const addPositions = (arr1, arr2) => arr1.map((first, i) => first + arr2[i]);
 const subPositions = (arr1, arr2) => arr1.map((first, i) => first - arr2[i]);
 
 // Constants
-const KEY = {};
-KEY.SPACE = 32;
+const KEY = {
+	SPACE: 32,
+};
+
+const MOUSE = {
+	LEFT: 0,
+	MIDDLE: 1,
+	RIGHT: 2,
+};
 
 class CanvasSpace extends React.Component{
 	constructor(props){
@@ -23,13 +30,24 @@ class CanvasSpace extends React.Component{
 	windowPosition = null;
 	panPosition = [0,0];
 	keyIsPressed = [];
+	mouseIsPressed = [];
+
 	// Events
 	onMouseMove = event => {
-		if(!this.mouseDown) {
-			return;
-		}
 		// Pan or draw line
-		(this.keyIsPressed[KEY.SPACE] ? this.onPan : this.onDrawLine)(event);
+		// (this.keyIsPressed[KEY.SPACE] ? this.onPan : this.onDrawLine)(event);
+		(()=>{
+			if(this.keyIsPressed[KEY.SPACE] && this.mouseIsPressed[MOUSE.LEFT]){
+				return this.onPan;
+			}
+			if(this.mouseIsPressed[MOUSE.LEFT]){
+				return this.onDrawLine;
+			}
+			if(this.mouseIsPressed[MOUSE.MIDDLE]){
+				return this.onPan;
+			}
+			return ()=>null;
+		})()(event);
 	}
 	onDrawLine = event => {
 		const currentPosition = this.getMousePosition(event, this.refs.canvas)
@@ -77,11 +95,12 @@ class CanvasSpace extends React.Component{
 	onMouseDown = event => {
 		this.canvasPosition = this.getMousePosition(event, this.refs.canvas);
 		this.windowPosition = this.getMousePosition(event, this.refs.canvasWindow);
-		this.mouseDown = true;
+		this.mouseIsPressed[event.button] = true;
 	}
-	onMouseUp = () => {
-		this.mouseDown = false;
+	onMouseUp = event => {
+		this.mouseIsPressed[event.button] = false;
 	}
+	onContextMenu = event => event.preventDefault(); // Disable context menu
 	onWheel = event => {
 		event.preventDefault(); // Prevent scrolling
 		(event.ctrlKey ? this.onZoom : this.onScroll)(event);
@@ -106,7 +125,7 @@ class CanvasSpace extends React.Component{
 		this.panWindow(event.deltaX*mult, event.deltaY*mult);
 	}
 	onKeyDown = event => {
-		if(this.mouseDown){
+		if(this.mouseIsPressed[MOUSE.LEFT]){
 			event.preventDefault();
 		}
 		this.keyIsPressed[event.keyCode] = true;
@@ -120,9 +139,10 @@ class CanvasSpace extends React.Component{
 		document.body.onmouseup = this.onMouseUp;
 		document.body.onkeydown = this.onKeyDown;
 		document.body.onkeyup = this.onKeyUp;
+		document.body.oncontextmenu = this.onContextMenu;
 
-		const {canvasSpace} = this.refs;
-		console.log(canvasSpace.clientHeight);
+		// const {canvasSpace} = this.refs;
+		// console.log(canvasSpace.clientHeight);
 	}
 	// Other functions
 	getScale = () => {
