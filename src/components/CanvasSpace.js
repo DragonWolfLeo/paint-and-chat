@@ -34,7 +34,7 @@ class CanvasSpace extends React.Component{
 
 	// Events
 	onMouseMove = event => {
-		// Pan or draw line
+		// Return function based on inputs
 		(()=>{
 			if(this.keyIsPressed[KEY.SPACE] && this.mouseIsPressed[MOUSE.LEFT]){
 				return this.onPan;
@@ -81,7 +81,11 @@ class CanvasSpace extends React.Component{
 	}
 	panWindow = (...delta) => {
 		const pan = addPositions(this.panPosition, [...delta]);
-		this.setState({pan},()=>this.panPosition = pan);
+		this.setState({
+			pan,
+		},()=>{
+			this.panPosition = pan;
+		});
 	}
 	getMousePosition = (event, target) => {
 		// Get mouse location
@@ -106,18 +110,18 @@ class CanvasSpace extends React.Component{
 	}
 	onZoom = event => {
 		const delta = event.deltaY/30;
-		this.setState(prevState=>{
-			return {zoom: prevState.zoom + delta}
-		})
-	
-		// TODO: Get window to scroll towards the position of the mouse
-		// const e = {...event};
-		// // console.log(e.clientX/e.currentTarget.clientWidth)
-		// // console.log(e);
-		// // console.log(e.clientX, e.clientY, e.currentTarget.scrollLeftMax, e.currentTarget.scrollTopMax);
-		// const {currentTarget: target} = e;
-		// target.scrollLeft = target.scrollLeftMax*(e.clientX/e.currentTarget.clientWidth);
-		// target.scrollTop = target.scrollTopMax*(e.clientY/e.currentTarget.clientHeight);
+		const {currentTarget: {clientWidth, clientHeight}, clientX, clientY} = event;
+		// Get distance of mouse cursor from the center
+		const distance = [
+			clientX - (clientWidth/2),
+			clientY - (clientHeight/2),
+		];
+		const {zoom: prevZoom} = this.state;
+		const zoom =  prevZoom + delta;
+		const scaleRatio = this.getScale(zoom)/this.getScale(prevZoom);
+		// Pan towards the mouse location
+		const pan = distance.map((d, i) => -((d - this.panPosition[i]) * scaleRatio) + d);
+		this.setState({zoom, pan},()=>this.panPosition = pan);
 	}
 	onScroll = event => {
 		const mult = 15;
@@ -138,13 +142,10 @@ class CanvasSpace extends React.Component{
 		document.body.onmouseup = this.onMouseUp;
 		document.body.onkeydown = this.onKeyDown;
 		document.body.onkeyup = this.onKeyUp;
-
-		// const {canvasSpace} = this.refs;
-		// console.log(canvasSpace.clientHeight);
 	}
 	// Other functions
-	getScale = () => {
-		return 2**this.state.zoom;
+	getScale = zoom => {
+		return 2**(zoom || this.state.zoom);
 	}
 	render(){
 		const {nativeWidth, nativeHeight, pan} = this.state;
@@ -156,7 +157,7 @@ class CanvasSpace extends React.Component{
 				onWheel={this.onWheel}		
 				onContextMenu={this.onContextMenu}
 			>
-				<div className="canvasSpace bg-gray"
+				<div className="canvasSpace"
 					ref="canvasSpace"
 					style={{
 						transform: `translate(${pan[0]}px,${pan[1]}px)`,
