@@ -1,9 +1,9 @@
 import React, { Component } from 'react';
-import request from 'superagent';
+// import request from 'superagent';
 import "tachyons";
 import './css/App.css';
 import CanvasSpace from './components/CanvasSpace';
-import Chat from './components/Chat';
+// import Chat from './components/Chat';
 
 // window.serverUrl = "http://localhost:3001";
 

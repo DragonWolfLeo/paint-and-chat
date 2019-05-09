@@ -26,7 +26,7 @@ class CanvasSpace extends React.Component{
 		}
 	}
 	mouseDown = false;
-	canvasPosition = null;
+	mousePosition = null;
 	windowPosition = null;
 	panPosition = [0,0];
 	keyIsPressed = [];
@@ -49,24 +49,23 @@ class CanvasSpace extends React.Component{
 		})()(event);
 	}
 	onDrawLine = event => {
-		const currentPosition = this.getMousePosition(event, this.refs.canvas)
-		if (!this.canvasPosition) {
+		const currentPosition = this.getMousePosition(event, this.refs.drawingCanvas)
+		if (!this.mousePosition) {
 			// Save previous position
-			this.canvasPosition = currentPosition;
+			this.mousePosition = currentPosition;
 			return;
 		}
-		const {canvas} = this.refs;
-		const ctx = canvas.getContext("2d");
+		const ctx = this.refs.drawingCanvas.getContext("2d");
 
 		// Draw a line
 		ctx.fillStyle = "#000000";
 		ctx.beginPath();
 		ctx.moveTo(...currentPosition);
-		ctx.lineTo(...this.canvasPosition);
+		ctx.lineTo(...this.mousePosition);
 		ctx.stroke();
 
 		// // Save current position as current
-		this.canvasPosition = currentPosition;
+		this.mousePosition = currentPosition;
 	}
 	onPan = event => {
 		const currentPosition = this.getMousePosition(event, this.refs.canvasWindow)
@@ -90,18 +89,19 @@ class CanvasSpace extends React.Component{
 	getMousePosition = (event, target) => {
 		// Get mouse location
 		const rect = target.getBoundingClientRect();
-		const scale = target === this.refs.canvas ? this.getScale() : 1;
+		const scale = target === this.refs.drawingCanvas ? this.getScale() : 1;
 		const x = event.clientX - rect.x;
 		const y = event.clientY - rect.y;
 		return [x/scale, y/scale];
 	}
 	onMouseDown = event => {
-		this.canvasPosition = this.getMousePosition(event, this.refs.canvas);
+		this.mousePosition = this.getMousePosition(event, this.refs.drawingCanvas);
 		this.windowPosition = this.getMousePosition(event, this.refs.canvasWindow);
 		this.mouseIsPressed[event.button] = true;
 	}
 	onMouseUp = event => {
 		this.mouseIsPressed[event.button] = false;
+		this.sendCanvas();
 	}
 	onContextMenu = event => event.preventDefault(); // Disable context menu
 	onWheel = event => {
@@ -136,16 +136,22 @@ class CanvasSpace extends React.Component{
 	onKeyUp = event => {
 		this.keyIsPressed[event.keyCode] = false;
 	}
+	sendCanvas = () => {
+		const {drawingCanvas, mainCanvas} = this.refs;
+		const {nativeWidth, nativeHeight} = this.state;
+		mainCanvas.getContext("2d").drawImage(drawingCanvas, 0, 0);
+		drawingCanvas.getContext("2d").clearRect(0,0, nativeWidth, nativeHeight);
+	}
+	// Other functions
+	getScale = zoom => {
+		return 2**(zoom || this.state.zoom);
+	}
 	// Lifecycle hooks
 	componentDidMount(){
 		document.body.onmousemove = this.onMouseMove;
 		document.body.onmouseup = this.onMouseUp;
 		document.body.onkeydown = this.onKeyDown;
 		document.body.onkeyup = this.onKeyUp;
-	}
-	// Other functions
-	getScale = zoom => {
-		return 2**(zoom || this.state.zoom);
 	}
 	render(){
 		const {nativeWidth, nativeHeight, pan} = this.state;
@@ -161,6 +167,7 @@ class CanvasSpace extends React.Component{
 					ref="canvasSpace"
 					style={{
 						transform: `translate(${pan[0]}px,${pan[1]}px)`,
+						position: "relative",
 					}}
 				>
 					<canvas 
@@ -168,10 +175,23 @@ class CanvasSpace extends React.Component{
 							width: nativeWidth * scale,
 							height: nativeHeight * scale,
 						}}
-						ref="canvas" 
+						ref="mainCanvas" 
 						width={nativeWidth} 
-						height={nativeHeight} 
+						height={nativeHeight}
 					/>
+					{"  "}
+					<canvas 
+					style={{
+						width: nativeWidth * scale,
+						height: nativeHeight * scale,
+						position: "absolute",
+						top: 0,
+						left: 0,
+					}}
+					ref="drawingCanvas" 
+					width={nativeWidth} 
+					height={nativeHeight}
+				/>
 				</div>
 			</div>
 		);

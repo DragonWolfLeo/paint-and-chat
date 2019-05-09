@@ -34,11 +34,6 @@
   position: absolute;
   margin: auto;
   line-height: 0;
-}
-.smoothMotion{
-  transition: transform 100ms linear;
-}
-canvas {
   background-color: white;
 }
 
