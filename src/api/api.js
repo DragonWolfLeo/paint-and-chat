@@ -11,7 +11,6 @@ function postMessage(text) {
     socket.emit("sendMessage", text);
 }
 
-
 function onAuthenticate(cb) {
     socket.on("auth", authJsonResponseString => {
         var authResponse = JSON.parse(authJsonResponseString);
@@ -26,9 +25,14 @@ function onReceiveMessage(cb){
     socket.on("sendMessage", message => cb(null, message));
 }
 
+function sendCanvas(data){
+    socket.emit("sendCanvas", data);
+}
+
 export {
     authenticate,
     postMessage,
     onReceiveMessage,
     onAuthenticate,
+    sendCanvas,
 };

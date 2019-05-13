@@ -6,33 +6,14 @@ class Chat extends React.Component {
 		super();
 		this.state = {
 			chatLog : [],
-			user: null,						
-			connectionActive: false,
 		}
-		this.queuedScrollDown = true;
-		api.onAuthenticate((err, authResponse) => {
-			if(!authResponse)
-				authResponse = { error: "No response", user: {} };
-			var message = err
-				? "Failed to authenticate. Error is: " + authResponse.error
-				: "Authentication success. Token is: " + authResponse.token;
-			this.setState({
-				connectionActive: err ? false: true,
-				chatLog: this.state.chatLog.concat([message]),
-				user: {
-					name: authResponse.user.name
-				}
-			});
-		});
-		api.onReceiveMessage((err, message) => {
-			this.receiveMessage(message);
-		});
-		const user = (window.location.search && window.location.search.substr(1)) || "user";
-		api.authenticate(user, "users_pass", "dargon_drawing_room");
 	}
+	queuedScrollDown = false;
 	componentDidUpdate() {
+		// Scroll last message into view
 		if(this.queuedScrollDown) {
-			document.querySelector("#chatList > ul:last-child").scrollIntoView();
+			const {children} = this.refs.chatList;
+			children[children.length-1].scrollIntoView();
 			this.queuedScrollDown = false;
 		}
 	}
@@ -44,16 +25,17 @@ class Chat extends React.Component {
 	onClickSendMessage = (event) => {
 		event.preventDefault();
 		const target = document.getElementById("chatTF");
+		const {user} = this.props;
 		if(target.value.length) {
 			api.postMessage(target.value);
-			if(this.state.user){
+			if(user){
 				const now = new Date();
-				this.receiveMessage(`${now.toLocaleDateString()} ${now.toLocaleTimeString()} ${this.state.user.name}: ${target.value}`);
+				this.addMessage(`${now.toLocaleDateString()} ${now.toLocaleTimeString()} ${user.name}: ${target.value}`);
 			}
 			target.value = "";
 		}
 	}
-	receiveMessage = message => {
+	addMessage = message => {
 		if(message.length){
 			this.state.chatLog.push(message);
 			this.queuedScrollDown = true;
@@ -64,9 +46,9 @@ class Chat extends React.Component {
 	}
 	render(){
 		return (
-			<div id="chat" className="chat bg-navy db flex flex-column overflow-hidden">
+			<div className="chat bg-navy flex flex-column overflow-hidden">
 				<h3 className="bg-white-40 dib tl ma0 pa2">Dargon's Room</h3>
-				<li id="chatList" className="bg-white-70 h-100 tl overflow-y-scroll">
+				<li ref="chatList" className="bg-white-70 h-100 tl overflow-y-scroll">
 					{this.simulateChat(...this.state.chatLog)}
 				</li>
 				<form className="flex bg-white-40 pv2">

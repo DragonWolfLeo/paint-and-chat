@@ -1,4 +1,5 @@
 import React from "react";
+import * as api from '../api/api';
 
 // Utility functions
 const addPositions = (arr1, arr2) => arr1.map((first, i) => first + arr2[i]);
@@ -139,8 +140,10 @@ class CanvasSpace extends React.Component{
 	sendCanvas = () => {
 		const {drawingCanvas, mainCanvas} = this.refs;
 		const {nativeWidth, nativeHeight} = this.state;
-		mainCanvas.getContext("2d").drawImage(drawingCanvas, 0, 0);
-		drawingCanvas.getContext("2d").clearRect(0,0, nativeWidth, nativeHeight);
+		const ctx_main = mainCanvas.getContext("2d");
+		const ctx_drawing = drawingCanvas.getContext("2d");
+		ctx_main.drawImage(drawingCanvas, 0, 0);
+		ctx_drawing.clearRect(0,0, nativeWidth, nativeHeight);
 	}
 	// Other functions
 	getScale = zoom => {

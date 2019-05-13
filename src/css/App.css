@@ -10,7 +10,7 @@
   resize: both;
   overflow: hidden;
 }
-#chat{
+.chat{
   border: black solid;
   border-width: 0 0 0 3px;
   flex: 0 0 350px;
@@ -37,7 +37,7 @@
   background-color: white;
 }
 
-#chat li{
+.chat li{
   list-style: none;
 }
 ul{
@@ -51,7 +51,7 @@ ul{
     align-items: stretch;
     flex-direction: column;
   }
-  #chat{
+  .chat{
     flex: 0 0 300px;
     border-width: 3px 0 0;
   }
