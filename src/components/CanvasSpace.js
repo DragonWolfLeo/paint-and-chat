@@ -2,12 +2,13 @@ import React from "react";
 import * as api from '../api/api';
 
 // Utility functions
-const addPositions = (arr1, arr2) => arr1.map((first, i) => first + arr2[i]);
+// const addPositions = (arr1, arr2) => arr1.map((first, i) => first + arr2[i]);
 const subPositions = (arr1, arr2) => arr1.map((first, i) => first - arr2[i]);
 
 // Constants
 const KEY = {
 	SPACE: 32,
+	ESC: 27,
 };
 
 const MOUSE = {
@@ -78,12 +79,12 @@ class CanvasSpace extends React.Component{
 			this.windowPosition = currentPosition;
 			return;
 		}
-		const delta = subPositions(currentPosition, this.windowPosition);
+		const delta = subPositions(this.windowPosition, currentPosition);
 		this.panWindow(...delta);
 		this.windowPosition = currentPosition;
 	}
 	panWindow = (...delta) => {
-		const pan = addPositions(this.panPosition, [...delta]);
+		const pan = subPositions(this.panPosition, [...delta]);
 		this.setState({
 			pan,
 		},()=>{
@@ -113,7 +114,13 @@ class CanvasSpace extends React.Component{
 		(event.ctrlKey ? this.onZoom : this.onScroll)(event);
 	}
 	onZoom = event => {
-		const delta = event.deltaY/30;
+		// const delta = event.deltaY/30;
+		let delta = event.deltaY;
+		if(delta > 0){
+			delta = 0.1;
+		} else if (delta < 0) {
+			delta = -0.1;
+		}
 		const {currentTarget: {clientWidth, clientHeight}, clientX, clientY} = event;
 		// Get distance of mouse cursor from the center
 		const distance = [
@@ -121,24 +128,41 @@ class CanvasSpace extends React.Component{
 			clientY - (clientHeight/2),
 		];
 		const {zoom: prevZoom} = this.state;
-		const zoom =  prevZoom + delta;
+		const zoom =  prevZoom - delta;
 		const scaleRatio = this.getScale(zoom)/this.getScale(prevZoom);
 		// Pan towards the mouse location
 		const pan = distance.map((d, i) => -((d - this.panPosition[i]) * scaleRatio) + d);
 		this.setState({zoom, pan},()=>this.panPosition = pan);
 	}
 	onScroll = event => {
-		const mult = 15;
-		this.panWindow(event.deltaX*mult, event.deltaY*mult);
+		let {deltaX, deltaY} = event;
+		if(deltaX > 0){
+			deltaX = 1;
+		} else if (deltaX < 0) {
+			deltaX = -1;
+		}
+		if(deltaY > 0){
+			deltaY = 1;
+		} else if (deltaY < 0) {
+			deltaY = -1;
+		}
+		const mult = 20;
+		this.panWindow(deltaX*mult,deltaY*mult);
 	}
 	onKeyDown = event => {
 		if(this.mouseIsPressed[MOUSE.LEFT]){
 			event.preventDefault();
 		}
 		this.keyIsPressed[event.keyCode] = true;
+		this.onKeyPress(event);
 	}
 	onKeyUp = event => {
 		this.keyIsPressed[event.keyCode] = false;
+	}
+	onKeyPress = event => {
+		switch(event.keyCode){
+			
+		}
 	}
 	sendCanvas = () => {
 		const {drawingCanvas} = this.refs;
@@ -174,6 +198,9 @@ class CanvasSpace extends React.Component{
 		document.body.onmouseup = this.onMouseUp;
 		document.body.onkeydown = this.onKeyDown;
 		document.body.onkeyup = this.onKeyUp;
+
+		// Manually add onwheel listneer as a non-passive event
+		this.refs.canvasWindow.addEventListener('wheel', this.onWheel, {passive: false});
 	}
 	render(){
 		const {nativeWidth, nativeHeight, pan} = this.state;
@@ -182,7 +209,6 @@ class CanvasSpace extends React.Component{
 			<div className="canvasWindow"
 				ref="canvasWindow"
 				onMouseDown={this.onMouseDown}
-				onWheel={this.onWheel}		
 				onContextMenu={this.onContextMenu}
 			>
 				<div className="canvasSpace"
