@@ -25,6 +25,9 @@ class CanvasSpace extends React.Component{
 			zoom: 0,
 			pan: [0,0],
 		}
+		api.onReceiveCanvas((err, data) => {
+			this.onReceiveCanvas(data);
+		});
 	}
 	mouseDown = false;
 	mousePosition = null;
@@ -138,12 +141,28 @@ class CanvasSpace extends React.Component{
 		this.keyIsPressed[event.keyCode] = false;
 	}
 	sendCanvas = () => {
-		const {drawingCanvas, mainCanvas} = this.refs;
+		const {drawingCanvas} = this.refs;
 		const {nativeWidth, nativeHeight} = this.state;
-		const ctx_main = mainCanvas.getContext("2d");
-		const ctx_drawing = drawingCanvas.getContext("2d");
-		ctx_main.drawImage(drawingCanvas, 0, 0);
-		ctx_drawing.clearRect(0,0, nativeWidth, nativeHeight);
+		const nativeSize = [nativeWidth, nativeHeight];
+		drawingCanvas.toBlob(blob=>{
+			api.sendCanvas({blob});
+			drawingCanvas.getContext("2d").clearRect(0,0, ...nativeSize);
+		});
+	}
+	onReceiveCanvas = data => {
+		if(!data){
+			console.log("Error: No data received");
+		}
+		const ctx = this.refs.mainCanvas.getContext("2d");
+		const img = document.createElement("img");
+		const blob = new Blob([new Uint8Array(data.blob)], {type: "image/png"});
+		const url = URL.createObjectURL(blob);
+		img.onload = () => {
+			// Draw onto main canvas, then delete this element
+			ctx.drawImage(img,0,0);
+			// TODO: Delete img element
+		}
+		img.src = url;
 	}
 	// Other functions
 	getScale = zoom => {
@@ -182,7 +201,7 @@ class CanvasSpace extends React.Component{
 						width={nativeWidth} 
 						height={nativeHeight}
 					/>
-					{"  "}
+					{"  "/* DEBUG: Remove this line when done */}
 					<canvas 
 					style={{
 						width: nativeWidth * scale,

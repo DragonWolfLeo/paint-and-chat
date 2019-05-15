@@ -29,10 +29,15 @@ function sendCanvas(data){
     socket.emit("sendCanvas", data);
 }
 
+function onReceiveCanvas(cb){
+    socket.on("sendCanvas", canvas => cb(null, canvas));
+}
+
 export {
     authenticate,
     postMessage,
     onReceiveMessage,
     onAuthenticate,
     sendCanvas,
+    onReceiveCanvas,
 };

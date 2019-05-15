@@ -7,6 +7,9 @@ class Chat extends React.Component {
 		this.state = {
 			chatLog : [],
 		}
+		api.onReceiveMessage((err, message) => {
+			this.addMessage(message);
+		});
 	}
 	queuedScrollDown = false;
 	componentDidUpdate() {

@@ -38,9 +38,6 @@ class App extends Component {
 			});
 			this.refs.chat.addMessage(message);
 		});
-		api.onReceiveMessage((err, message) => {
-			this.refs.chat.addMessage(message);
-		});
 		const user = (window.location.search && window.location.search.substr(1)) || "user";
 		api.authenticate(user, "users_pass", "dargon_drawing_room");
 	}
@@ -49,7 +46,7 @@ class App extends Component {
 			<div className="App">
 				<div id="mainContainer">
 					<CanvasSpace />
-					<Chat ref="chat" user={this.state.user} className="dn" />
+					<Chat ref="chat" user={this.state.user} />
 				</div>
 			</div>
 		);
