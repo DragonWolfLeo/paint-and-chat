@@ -34,30 +34,56 @@ class CanvasSpace extends React.Component{
 		api.onReceiveCanvas((err, data) => {
 			this.onReceiveCanvas(data);
 		});
+		// Mouse bindings
+		this.addMouseBinding("PAN", [MOUSE.LEFT, KEY.SPACE], MOUSE.MIDDLE);
+		this.addMouseBinding("DRAW", MOUSE.LEFT);
+
+		// Lock binding sets as they should no longer be modified
+		Object.freeze(this.keyedMouseControls);
+		Object.freeze(this.unkeyedMouseControls);
 	}
-	mousePosition = null;
-	windowPosition = null;
-	panPosition = [0,0];
+	mousePosition = null; // The mouse location relative to the canvas
+	windowPosition = null; // The mouse location relative to the window
+	panPosition = [0,0]; // The current pan, stored here to be independent of the state's asynchronous nature
+
+	// Controls
 	keyIsPressed = [];
 	mouseIsPressed = [];
+	controlActive = {};
+
+	// To be used by onMouseDown and onMouseUp. Add bindings in the constructor using addMouseBinding.
+	keyedMouseControls = [];
+	unkeyedMouseControls = [];
+	addMouseBinding = (name, ...bindings) => {
+		bindings.forEach(bind => {
+			let mouse, key = null;
+			if(typeof(bind)==="object"){
+				[mouse, key] = bind;
+			} else {
+				mouse = bind;
+			}
+			const targetControls = key !== null ? this.keyedMouseControls : this.unkeyedMouseControls;
+			if(!targetControls[mouse]){
+				targetControls[mouse] = [];
+			}
+			targetControls[mouse].push({name, key});
+		});
+	}
 
 	// Events
 	onMouseMove = event => {
 		// Return function based on inputs
 		(()=>{
-			if(this.keyIsPressed[KEY.SPACE] && this.mouseIsPressed[MOUSE.LEFT]){
-				return this.onPan;
+			if(this.controlActive.PAN){
+				return this.panCanvas;
 			}
-			if(this.mouseIsPressed[MOUSE.LEFT]){
-				return this.onDrawLine;
-			}
-			if(this.mouseIsPressed[MOUSE.MIDDLE]){
-				return this.onPan;
+			if(this.controlActive.DRAW){
+				return this.drawLine;
 			}
 			return ()=>null;
 		})()(event);
 	}
-	onDrawLine = event => {
+	drawLine = event => {
 		const currentPosition = this.getMousePosition(event, this.refs.drawingCanvas)
 		if (!this.mousePosition) {
 			// Save previous position
@@ -76,7 +102,7 @@ class CanvasSpace extends React.Component{
 		// // Save current position as current
 		this.mousePosition = currentPosition;
 	}
-	onPan = event => {
+	panCanvas = event => {
 		const currentPosition = this.getMousePosition(event, this.refs.canvasWindow)
 		if (!this.windowPosition) {
 			// Save previous position
@@ -103,21 +129,63 @@ class CanvasSpace extends React.Component{
 		this.mousePosition = this.getMousePosition(event, this.refs.drawingCanvas);
 		this.windowPosition = this.getMousePosition(event, this.refs.canvasWindow);
 		this.mouseIsPressed[event.button] = true;
+
+		// Enable keyed bindings
+		const mbind = this.keyedMouseControls[event.button];
+		let keyActive = false;
+		mbind && mbind.forEach(({name, key})=>{
+			if(this.keyIsPressed[key]){
+				this.controlActive[name] = true;
+				this.onControlActivate(name);
+				keyActive = true;
+			}
+		});
+
+		// If no keyed bindings were activated, enable unkeyed
+		if(!keyActive){
+			const mbind = this.unkeyedMouseControls[event.button];
+			mbind && mbind.forEach(({name})=>{
+				this.controlActive[name] = true;
+				this.onControlActivate(name);
+			});
+		}
 	}
 	onMouseUp = event => {
 		this.mouseIsPressed[event.button] = false;
 
-		// Specific mouse binds
-		if(event.button === MOUSE.LEFT){
-			this.sendCanvas();
+		// Disable ALL keyed bindings
+		const mbind = this.keyedMouseControls[event.button];
+		let keyWasActive = false;
+		mbind && mbind.forEach(({name, key})=>{
+			this.controlActive[name] = false;
+			this.keyIsPressed[key] && (keyWasActive = true);
+			this.onControlDeactivate(name);
+		});
+
+		// If no keyed bindings were deactivated, disable unkeyed
+		if(!keyWasActive){
+			const mbind = this.unkeyedMouseControls[event.button];
+			mbind && mbind.forEach(({name})=>{
+				this.controlActive[name] = false;
+				this.onControlDeactivate(name);
+			});
+		}
+
+	}
+	onControlActivate = control => {
+	}
+	onControlDeactivate = control => {
+		switch(control){
+			case "DRAW": return this.sendCanvas();
+			default: return;
 		}
 	}
 	onContextMenu = event => event.preventDefault(); // Disable context menu
 	onWheel = event => {
 		event.preventDefault(); // Prevent scrolling
-		(event.ctrlKey ? this.onZoom : this.onScroll)(event); // Zoom or scroll depending if ctrl is pressed
+		(event.ctrlKey ? this.zoomCanvas : this.scrollCanvas)(event); // Zoom or scroll depending if ctrl is pressed
 	}
-	onZoom = event => {
+	zoomCanvas = event => {
 		const max = 0.1;
 		const delta = absValueMax(event.deltaY, max);
 		const {currentTarget: {clientWidth, clientHeight}, clientX, clientY} = event;
@@ -133,7 +201,7 @@ class CanvasSpace extends React.Component{
 		const pan = distance.map((d, i) => -((d - this.panPosition[i]) * scaleRatio) + d);
 		this.setState({zoom, pan},()=>this.panPosition = pan);
 	}
-	onScroll = event => {
+	scrollCanvas = event => {
 		const max = 20;
 		const angle = Math.atan2(event.deltaY, event.deltaX);
 		const delta = [Math.cos(angle), Math.sin(angle)];
