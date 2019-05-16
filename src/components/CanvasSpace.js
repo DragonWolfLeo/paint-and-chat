@@ -4,18 +4,23 @@ import * as api from '../api/api';
 // Utility functions
 // const addPositions = (arr1, arr2) => arr1.map((first, i) => first + arr2[i]);
 const subPositions = (arr1, arr2) => arr1.map((first, i) => first - arr2[i]);
+const absValueMax = (num, max) =>
+	num > max ? max :
+	num < -max ? -max :
+	num;
+
 
 // Constants
-const KEY = {
+const KEY = Object.freeze({
 	SPACE: 32,
 	ESC: 27,
-};
+});
 
-const MOUSE = {
+const MOUSE = Object.freeze({
 	LEFT: 0,
 	MIDDLE: 1,
 	RIGHT: 2,
-};
+});
 
 class CanvasSpace extends React.Component{
 	constructor(props){
@@ -30,7 +35,6 @@ class CanvasSpace extends React.Component{
 			this.onReceiveCanvas(data);
 		});
 	}
-	mouseDown = false;
 	mousePosition = null;
 	windowPosition = null;
 	panPosition = [0,0];
@@ -85,11 +89,7 @@ class CanvasSpace extends React.Component{
 	}
 	panWindow = (...delta) => {
 		const pan = subPositions(this.panPosition, [...delta]);
-		this.setState({
-			pan,
-		},()=>{
-			this.panPosition = pan;
-		});
+		this.setState({pan},()=>this.panPosition = pan);
 	}
 	getMousePosition = (event, target) => {
 		// Get mouse location
@@ -106,21 +106,20 @@ class CanvasSpace extends React.Component{
 	}
 	onMouseUp = event => {
 		this.mouseIsPressed[event.button] = false;
-		this.sendCanvas();
+
+		// Specific mouse binds
+		if(event.button === MOUSE.LEFT){
+			this.sendCanvas();
+		}
 	}
 	onContextMenu = event => event.preventDefault(); // Disable context menu
 	onWheel = event => {
 		event.preventDefault(); // Prevent scrolling
-		(event.ctrlKey ? this.onZoom : this.onScroll)(event);
+		(event.ctrlKey ? this.onZoom : this.onScroll)(event); // Zoom or scroll depending if ctrl is pressed
 	}
 	onZoom = event => {
-		// const delta = event.deltaY/30;
-		let delta = event.deltaY;
-		if(delta > 0){
-			delta = 0.1;
-		} else if (delta < 0) {
-			delta = -0.1;
-		}
+		const max = 0.1;
+		const delta = absValueMax(event.deltaY, max);
 		const {currentTarget: {clientWidth, clientHeight}, clientX, clientY} = event;
 		// Get distance of mouse cursor from the center
 		const distance = [
@@ -135,34 +134,30 @@ class CanvasSpace extends React.Component{
 		this.setState({zoom, pan},()=>this.panPosition = pan);
 	}
 	onScroll = event => {
-		let {deltaX, deltaY} = event;
-		if(deltaX > 0){
-			deltaX = 1;
-		} else if (deltaX < 0) {
-			deltaX = -1;
-		}
-		if(deltaY > 0){
-			deltaY = 1;
-		} else if (deltaY < 0) {
-			deltaY = -1;
-		}
-		const mult = 20;
-		this.panWindow(deltaX*mult,deltaY*mult);
+		const max = 20;
+		const angle = Math.atan2(event.deltaY, event.deltaX);
+		const delta = [Math.cos(angle), Math.sin(angle)];
+		this.panWindow(...delta.map(num=>num*max));
 	}
 	onKeyDown = event => {
 		if(this.mouseIsPressed[MOUSE.LEFT]){
 			event.preventDefault();
 		}
 		this.keyIsPressed[event.keyCode] = true;
-		this.onKeyPress(event);
+		
+		// Specific key binds
+		switch(event.keyCode){
+			case KEY.ESC:
+				// Reset pan position
+				const pan = [0,0];
+				this.setState({pan},()=>this.panPosition = pan);
+				break;
+			default:
+				break;
+		}
 	}
 	onKeyUp = event => {
 		this.keyIsPressed[event.keyCode] = false;
-	}
-	onKeyPress = event => {
-		switch(event.keyCode){
-			
-		}
 	}
 	sendCanvas = () => {
 		const {drawingCanvas} = this.refs;
@@ -179,12 +174,12 @@ class CanvasSpace extends React.Component{
 		}
 		const ctx = this.refs.mainCanvas.getContext("2d");
 		const img = document.createElement("img");
-		const blob = new Blob([new Uint8Array(data.blob)], {type: "image/png"});
-		const url = URL.createObjectURL(blob);
+		const url = URL.createObjectURL(new Blob([new Uint8Array(data.blob)], {type: "image/png"}));
 		img.onload = () => {
-			// Draw onto main canvas, then delete this element
+			// Draw onto main canvas
 			ctx.drawImage(img,0,0);
-			// TODO: Delete img element
+			// Revoke url
+			URL.revokeObjectURL(url);
 		}
 		img.src = url;
 	}
@@ -227,7 +222,6 @@ class CanvasSpace extends React.Component{
 						width={nativeWidth} 
 						height={nativeHeight}
 					/>
-					{"  "/* DEBUG: Remove this line when done */}
 					<canvas 
 					style={{
 						width: nativeWidth * scale,
