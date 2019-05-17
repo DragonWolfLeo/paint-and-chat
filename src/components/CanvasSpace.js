@@ -275,7 +275,7 @@ class CanvasSpace extends React.Component{
 		const url = URL.createObjectURL(new Blob([new Uint8Array(data.blob)], {type: "image/png"}));
 		img.onload = () => {
 			// Draw onto main canvas
-			mainCanvas.getContext("2d").drawImage(img,0,0);
+			mainCanvas.getContext("2d", {alpha: false}).drawImage(img,0,0);
 			// Clear buffer canvas
 			bufferCanvas.getContext("2d").clearRect(0,0,nativeWidth, nativeHeight);
 			// Revoke url
