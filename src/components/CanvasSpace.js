@@ -14,12 +14,19 @@ const absValueMax = (num, max) =>
 const KEY = Object.freeze({
 	SPACE: 32,
 	ESC: 27,
+	NUM_0: 48,
 });
 
 const MOUSE = Object.freeze({
 	LEFT: 0,
 	MIDDLE: 1,
 	RIGHT: 2,
+});
+
+const ACTIONS = Object.freeze({
+	PAN: Symbol(),
+	DRAW: Symbol(),
+	ERASE: Symbol(),
 });
 
 class CanvasSpace extends React.Component{
@@ -35,8 +42,8 @@ class CanvasSpace extends React.Component{
 			this.onReceiveCanvas(data);
 		});
 		// Mouse bindings
-		this.addMouseBinding("PAN", [MOUSE.LEFT, KEY.SPACE], MOUSE.MIDDLE);
-		this.addMouseBinding("DRAW", MOUSE.LEFT);
+		this.addMouseBinding(ACTIONS.PAN, [MOUSE.LEFT, KEY.SPACE], MOUSE.MIDDLE);
+		this.addMouseBinding(ACTIONS.DRAW, MOUSE.LEFT);
 
 		// Lock binding sets as they should no longer be modified
 		Object.freeze(this.keyedMouseControls);
@@ -74,16 +81,16 @@ class CanvasSpace extends React.Component{
 	onMouseMove = event => {
 		// Return function based on inputs
 		(()=>{
-			if(this.controlActive.PAN){
-				return this.panCanvas;
+			if(this.controlActive[ACTIONS.PAN]){
+				return this.onPan;
 			}
-			if(this.controlActive.DRAW){
-				return this.drawLine;
+			if(this.controlActive[ACTIONS.DRAW]){
+				return this.onDrawLine;
 			}
 			return ()=>null;
 		})()(event);
 	}
-	drawLine = event => {
+	onDrawLine = event => {
 		const currentPosition = this.getMousePosition(event, this.refs.drawingCanvas)
 		if (!this.mousePosition) {
 			// Save previous position
@@ -102,7 +109,7 @@ class CanvasSpace extends React.Component{
 		// // Save current position as current
 		this.mousePosition = currentPosition;
 	}
-	panCanvas = event => {
+	onPan = event => {
 		const currentPosition = this.getMousePosition(event, this.refs.canvasWindow)
 		if (!this.windowPosition) {
 			// Save previous position
@@ -176,16 +183,16 @@ class CanvasSpace extends React.Component{
 	}
 	onControlDeactivate = control => {
 		switch(control){
-			case "DRAW": return this.sendCanvas();
+			case ACTIONS.DRAW: return this.sendCanvas();
 			default: return;
 		}
 	}
 	onContextMenu = event => event.preventDefault(); // Disable context menu
 	onWheel = event => {
 		event.preventDefault(); // Prevent scrolling
-		(event.ctrlKey ? this.zoomCanvas : this.scrollCanvas)(event); // Zoom or scroll depending if ctrl is pressed
+		(event.ctrlKey ? this.onZoom : this.onScroll)(event); // Zoom or scroll depending if ctrl is pressed
 	}
-	zoomCanvas = event => {
+	onZoom = event => {
 		const max = 0.1;
 		const delta = absValueMax(event.deltaY, max);
 		const {currentTarget: {clientWidth, clientHeight}, clientX, clientY} = event;
@@ -201,28 +208,31 @@ class CanvasSpace extends React.Component{
 		const pan = distance.map((d, i) => -((d - this.panPosition[i]) * scaleRatio) + d);
 		this.setState({zoom, pan},()=>this.panPosition = pan);
 	}
-	scrollCanvas = event => {
+	onScroll = event => {
 		const max = 20;
 		const angle = Math.atan2(event.deltaY, event.deltaX);
 		const delta = [Math.cos(angle), Math.sin(angle)];
 		this.panWindow(...delta.map(num=>num*max));
 	}
 	onKeyDown = event => {
-		if(this.mouseIsPressed[MOUSE.LEFT]){
-			event.preventDefault();
-		}
 		this.keyIsPressed[event.keyCode] = true;
 		
 		// Specific key binds
+		let preventDefault = true;
 		switch(event.keyCode){
 			case KEY.ESC:
 				// Reset pan position
 				const pan = [0,0];
 				this.setState({pan},()=>this.panPosition = pan);
 				break;
+			case KEY.SPACE:
+				// Used by PAN
+				break;
 			default:
+				preventDefault = false;
 				break;
 		}
+		preventDefault && event.preventDefault();
 	}
 	onKeyUp = event => {
 		this.keyIsPressed[event.keyCode] = false;
@@ -264,6 +274,11 @@ class CanvasSpace extends React.Component{
 
 		// Manually add onwheel listneer as a non-passive event
 		this.refs.canvasWindow.addEventListener('wheel', this.onWheel, {passive: false});
+
+		// Initialize main canvas
+		const ctx = this.refs.mainCanvas.getContext("2d", {alpha: false});
+		ctx.fillStyle="#ffffff";
+		ctx.fillRect(0,0,this.state.nativeWidth,this.state.nativeHeight);
 	}
 	render(){
 		const {nativeWidth, nativeHeight, pan} = this.state;
@@ -285,6 +300,9 @@ class CanvasSpace extends React.Component{
 						style={{
 							width: nativeWidth * scale,
 							height: nativeHeight * scale,
+							position: "absolute",
+							left: -nativeWidth*scale/2,
+							top: -nativeHeight*scale/2,
 						}}
 						ref="mainCanvas" 
 						width={nativeWidth} 
@@ -295,8 +313,8 @@ class CanvasSpace extends React.Component{
 						width: nativeWidth * scale,
 						height: nativeHeight * scale,
 						position: "absolute",
-						top: 0,
-						left: 0,
+						left: -nativeWidth*scale/2,
+						top: -nativeHeight*scale/2,
 					}}
 					ref="drawingCanvas" 
 					width={nativeWidth} 
