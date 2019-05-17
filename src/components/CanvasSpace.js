@@ -49,9 +49,11 @@ class CanvasSpace extends React.Component{
 		Object.freeze(this.keyedMouseControls);
 		Object.freeze(this.unkeyedMouseControls);
 	}
+	mouseIsOverCanvasWindow = false; // Updated onMouseMove
 	mousePosition = null; // The mouse location relative to the canvas
 	windowPosition = null; // The mouse location relative to the window
 	panPosition = [0,0]; // The current pan, stored here to be independent of the state's asynchronous nature
+	drawingDirty = false;
 
 	// Controls
 	keyIsPressed = [];
@@ -90,7 +92,10 @@ class CanvasSpace extends React.Component{
 			return ()=>null;
 		})()(event);
 	}
+	onMouseOver = event => this.mouseIsOverCanvasWindow = true;
+	onMouseOut = event => this.mouseIsOverCanvasWindow = false;
 	onDrawLine = event => {
+		this.drawingDirty = true;
 		const currentPosition = this.getMousePosition(event, this.refs.drawingCanvas)
 		if (!this.mousePosition) {
 			// Save previous position
@@ -183,7 +188,12 @@ class CanvasSpace extends React.Component{
 	}
 	onControlDeactivate = control => {
 		switch(control){
-			case ACTIONS.DRAW: return this.sendCanvas();
+			case ACTIONS.DRAW:
+				if(this.drawingDirty){
+					this.drawingDirty = false;
+					this.sendCanvas();
+				}
+				return;
 			default: return;
 		}
 	}
@@ -216,7 +226,7 @@ class CanvasSpace extends React.Component{
 	}
 	onKeyDown = event => {
 		this.keyIsPressed[event.keyCode] = true;
-		
+		console.log(event.target);
 		// Specific key binds
 		let preventDefault = true;
 		switch(event.keyCode){
@@ -228,6 +238,14 @@ class CanvasSpace extends React.Component{
 			case KEY.SPACE:
 				// Used by PAN
 				break;
+			case KEY.NUM_0:
+				// Reset zoom
+				if(event.ctrlKey && this.mouseIsOverCanvasWindow){
+					this.setState({zoom: 0});
+				} else {
+					preventDefault = false;
+				}
+				break;
 			default:
 				preventDefault = false;
 				break;
@@ -238,24 +256,28 @@ class CanvasSpace extends React.Component{
 		this.keyIsPressed[event.keyCode] = false;
 	}
 	sendCanvas = () => {
-		const {drawingCanvas} = this.refs;
+		const {drawingCanvas, bufferCanvas} = this.refs;
 		const {nativeWidth, nativeHeight} = this.state;
-		const nativeSize = [nativeWidth, nativeHeight];
 		drawingCanvas.toBlob(blob=>{
 			api.sendCanvas({blob});
-			drawingCanvas.getContext("2d").clearRect(0,0, ...nativeSize);
+			// Move drawn art to buffer canvas
+			bufferCanvas.getContext("2d").drawImage(drawingCanvas,0,0);
+			drawingCanvas.getContext("2d").clearRect(0,0,nativeWidth, nativeHeight);
 		});
 	}
 	onReceiveCanvas = data => {
 		if(!data){
 			console.log("Error: No data received");
 		}
-		const ctx = this.refs.mainCanvas.getContext("2d");
+		const {mainCanvas, bufferCanvas} = this.refs;
+		const {nativeWidth, nativeHeight} = this.state;
 		const img = document.createElement("img");
 		const url = URL.createObjectURL(new Blob([new Uint8Array(data.blob)], {type: "image/png"}));
 		img.onload = () => {
 			// Draw onto main canvas
-			ctx.drawImage(img,0,0);
+			mainCanvas.getContext("2d").drawImage(img,0,0);
+			// Clear buffer canvas
+			bufferCanvas.getContext("2d").clearRect(0,0,nativeWidth, nativeHeight);
 			// Revoke url
 			URL.revokeObjectURL(url);
 		}
@@ -283,11 +305,35 @@ class CanvasSpace extends React.Component{
 	render(){
 		const {nativeWidth, nativeHeight, pan} = this.state;
 		const scale = this.getScale();
+		// Set up canvas style (organized to reduce math)
+		const style = {
+			width: Math.round(nativeWidth * scale),
+			height: Math.round(nativeHeight * scale),
+			position: "absolute",
+			imageRendering: scale < 2 ? "auto" : "crisp-edges",
+		};
+		Object.assign(style, {
+			left: -style.width/2,
+			top: -style.height/2,
+		});
+		// Make canvas function
+		const makeCanvas = ref => (
+			<canvas 
+				key={ref}
+				style={style}
+				ref={ref} 
+				width={nativeWidth} 
+				height={nativeHeight}
+			/>
+		);
+		//
 		return (
 			<div className="canvasWindow"
 				ref="canvasWindow"
 				onMouseDown={this.onMouseDown}
 				onContextMenu={this.onContextMenu}
+				onMouseOver={this.onMouseOver}
+				onMouseOut={this.onMouseOut}
 			>
 				<div className="canvasSpace"
 					ref="canvasSpace"
@@ -296,30 +342,11 @@ class CanvasSpace extends React.Component{
 						position: "relative",
 					}}
 				>
-					<canvas 
-						style={{
-							width: nativeWidth * scale,
-							height: nativeHeight * scale,
-							position: "absolute",
-							left: -nativeWidth*scale/2,
-							top: -nativeHeight*scale/2,
-						}}
-						ref="mainCanvas" 
-						width={nativeWidth} 
-						height={nativeHeight}
-					/>
-					<canvas 
-					style={{
-						width: nativeWidth * scale,
-						height: nativeHeight * scale,
-						position: "absolute",
-						left: -nativeWidth*scale/2,
-						top: -nativeHeight*scale/2,
-					}}
-					ref="drawingCanvas" 
-					width={nativeWidth} 
-					height={nativeHeight}
-				/>
+					{[
+						"mainCanvas",
+						"bufferCanvas",
+						"drawingCanvas",
+					].map(makeCanvas)}
 				</div>
 			</div>
 		);
