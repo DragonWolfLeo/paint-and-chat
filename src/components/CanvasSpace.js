@@ -225,8 +225,11 @@ class CanvasSpace extends React.Component{
 		this.panWindow(...delta.map(num=>num*max));
 	}
 	onKeyDown = event => {
+		if(event.target !== event.currentTarget){
+			// Cancel event if an input field is selected
+			return;
+		}
 		this.keyIsPressed[event.keyCode] = true;
-		console.log(event.target);
 		// Specific key binds
 		let preventDefault = true;
 		switch(event.keyCode){
@@ -272,7 +275,7 @@ class CanvasSpace extends React.Component{
 		const {mainCanvas, bufferCanvas} = this.refs;
 		const {nativeWidth, nativeHeight} = this.state;
 		const img = document.createElement("img");
-		const url = URL.createObjectURL(new Blob([new Uint8Array(data.blob)], {type: "image/png"}));
+		const url = URL.createObjectURL(new	 Blob([new Uint8Array(data.blob)], {type: "image/png"}));
 		img.onload = () => {
 			// Draw onto main canvas
 			mainCanvas.getContext("2d", {alpha: false}).drawImage(img,0,0);
@@ -339,7 +342,6 @@ class CanvasSpace extends React.Component{
 					ref="canvasSpace"
 					style={{
 						transform: `translate(${pan[0]}px,${pan[1]}px)`,
-						position: "relative",
 					}}
 				>
 					{[

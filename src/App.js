@@ -33,7 +33,8 @@ class App extends Component {
 			this.setState({
 				connectionActive: err ? false: true,
 				user: {
-					name: authResponse.user.name
+					name: authResponse.user.name,
+					color: authResponse.user.color,
 				}
 			});
 			this.refs.chat.addMessage(message);
