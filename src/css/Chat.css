@@ -1,0 +1,41 @@
+.chatContainer{
+	transition: transform 0.3s ease-out;
+	position: fixed;
+	height: 100%;
+	width: 350px;
+	top: 0;
+	right: 0;
+}
+.chat_hide{
+	transform: translateX(100%);
+}
+.chat{
+	position: relative;
+	border: black solid;
+	border-width: 0 0 0 3px;
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+}
+.chatCollapseBtn{
+	position: absolute;
+	top: 0px;
+	right: 100%;
+	margin: 8px 0px;
+	padding: 12px 6px;
+	background: #6c6c8b;
+	font-size: 1.75rem;
+	border-radius: 8px 0px 0px 8px;
+	border: black solid 2px;
+	border-right: 0px;
+	user-select: none;
+	cursor: pointer;
+}
+.chat li{
+	list-style: none;
+}
+ul{
+	margin: 0;
+	padding: 12px 8px;
+	overflow-wrap: break-word;
+}

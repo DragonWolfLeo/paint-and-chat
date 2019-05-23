@@ -1,5 +1,6 @@
 import React from "react";
 import * as api from '../api/api';
+import '../css/CanvasSpace.css';
 
 // Utility functions
 // const addPositions = (arr1, arr2) => arr1.map((first, i) => first + arr2[i]);
@@ -8,7 +9,6 @@ const absValueMax = (num, max) =>
 	num > max ? max :
 	num < -max ? -max :
 	num;
-
 
 // Constants
 const KEY = Object.freeze({
@@ -29,6 +29,9 @@ const ACTIONS = Object.freeze({
 	ERASE: Symbol(),
 });
 
+const STARTING_CHAT_WIDTH = 350;
+const STARTING_PAN = Object.freeze([-STARTING_CHAT_WIDTH/2,0]);
+
 class CanvasSpace extends React.Component{
 	constructor(props){
 		super(props);
@@ -36,12 +39,13 @@ class CanvasSpace extends React.Component{
 			nativeWidth: 400,
 			nativeHeight: 400,
 			zoom: 0,
-			pan: [0,0],
+			pan: this.getResetChatWidth(),
 		}
+		this.panPosition = [...this.state.pan];
 		api.onReceiveCanvas((err, data) => {
 			this.onReceiveCanvas(data);
 		});
-		// Mouse bindings
+		// Mouse bindings; 
 		this.addMouseBinding(ACTIONS.PAN, [MOUSE.LEFT, KEY.SPACE], MOUSE.MIDDLE);
 		this.addMouseBinding(ACTIONS.DRAW, MOUSE.LEFT);
 
@@ -52,8 +56,9 @@ class CanvasSpace extends React.Component{
 	mouseIsOverCanvasWindow = false; // Updated onMouseMove
 	mousePosition = null; // The mouse location relative to the canvas
 	windowPosition = null; // The mouse location relative to the window
-	panPosition = [0,0]; // The current pan, stored here to be independent of the state's asynchronous nature
+	panPosition = null; // The current pan, stored here to be independent of the state's asynchronous nature
 	drawingDirty = false;
+	chatWidth = STARTING_CHAT_WIDTH;
 
 	// Controls
 	keyIsPressed = [];
@@ -91,6 +96,19 @@ class CanvasSpace extends React.Component{
 			}
 			return ()=>null;
 		})()(event);
+	}
+	onControlActivate = control => {
+	}
+	onControlDeactivate = control => {
+		switch(control){
+			case ACTIONS.DRAW:
+				if(this.drawingDirty){
+					this.drawingDirty = false;
+					this.sendCanvas();
+				}
+				return;
+			default: return;
+		}
 	}
 	onMouseOver = event => this.mouseIsOverCanvasWindow = true;
 	onMouseOut = event => this.mouseIsOverCanvasWindow = false;
@@ -184,19 +202,6 @@ class CanvasSpace extends React.Component{
 		}
 
 	}
-	onControlActivate = control => {
-	}
-	onControlDeactivate = control => {
-		switch(control){
-			case ACTIONS.DRAW:
-				if(this.drawingDirty){
-					this.drawingDirty = false;
-					this.sendCanvas();
-				}
-				return;
-			default: return;
-		}
-	}
 	onContextMenu = event => event.preventDefault(); // Disable context menu
 	onWheel = event => {
 		event.preventDefault(); // Prevent scrolling
@@ -235,7 +240,7 @@ class CanvasSpace extends React.Component{
 		switch(event.keyCode){
 			case KEY.ESC:
 				// Reset pan position
-				const pan = [0,0];
+				const pan = this.getResetChatWidth();
 				this.setState({pan},()=>this.panPosition = pan);
 				break;
 			case KEY.SPACE:
@@ -290,6 +295,9 @@ class CanvasSpace extends React.Component{
 	getScale = zoom => {
 		return 2**(zoom || this.state.zoom);
 	}
+	getResetChatWidth = () => {
+		return [-this.chatWidth/2, 0];
+	}
 	// Lifecycle hooks
 	componentDidMount(){
 		document.body.onmousemove = this.onMouseMove;
@@ -331,7 +339,7 @@ class CanvasSpace extends React.Component{
 		);
 		//
 		return (
-			<div className="canvasWindow"
+			<div className="canvasSpaceContainer"
 				ref="canvasWindow"
 				onMouseDown={this.onMouseDown}
 				onContextMenu={this.onContextMenu}

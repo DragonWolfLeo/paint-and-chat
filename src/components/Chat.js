@@ -1,5 +1,6 @@
 import React from "react";
 import * as api from '../api/api';
+import '../css/Chat.css';
 
 // Constants
 const MESSAGE_TYPES = Object.freeze({
@@ -12,7 +13,7 @@ class Chat extends React.Component {
 		super();
 		this.state = {
 			chatLog : [],
-			hidden: true,
+			hidden: false,
 		}
 		api.onReceiveMessage((err, message) => {
 			this.addMessage(message);
@@ -26,6 +27,9 @@ class Chat extends React.Component {
 			children[children.length-1].scrollIntoView();
 			this.queuedScrollDown = false;
 		}
+	}
+	componentDidMount() {
+		this.sendChatWidthToCanvasSpace();
 	}
 	renderChat = (...chat) => chat.map((msg,i) =>
 		(<ul key={i} className="stripe-dark">{
@@ -82,14 +86,28 @@ class Chat extends React.Component {
 			})
 		}
 	}
+	onChangeCollapse = () => {
+		this.setState(prevState=>({hidden: !prevState.hidden}),()=>{
+			this.sendChatWidthToCanvasSpace();
+		});
+	}
+	sendChatWidthToCanvasSpace = () => {
+		// Send chat width to CanvasSpace
+		const {props: {onChangeCollapse}, state: {hidden}} = this;
+		onChangeCollapse && onChangeCollapse(hidden ? 0 : 350);
+	}
 	render(){
+		const {hidden} = this.state;
 		return (
-			<div className={`chatContainer ${this.state.hidden ? "hideChat" : "showChat"}`}>
+			<div className={`chatContainer chat_${hidden ? "hide" : "show"}`}>
+				<div 
+					className="chatCollapseBtn bg-navy"
+					onClick={this.onChangeCollapse}
+				>
+					{hidden ? "◀" : "▶"}
+				</div>
 				<div className={`chat bg-navy flex flex-column`}>
-					<h3 
-						className="bg-white-40 dib tl ma0 pa2"
-						onClick={()=>this.setState(prevState=>({hidden: !prevState.hidden}))}
-					>Dargon's Room</h3>
+					<h3 className="bg-white-40 dib tl ma0 pa2">Dargon's Room</h3>
 					<li ref="chatList" className="bg-white-70 h-100 tl overflow-y-scroll">
 						{this.renderChat(...this.state.chatLog)}
 					</li>

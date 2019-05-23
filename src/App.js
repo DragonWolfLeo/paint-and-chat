@@ -42,12 +42,16 @@ class App extends Component {
 		const user = (window.location.search && window.location.search.substr(1)) || "user";
 		api.authenticate(user, "users_pass", "dargon_drawing_room");
 	}
+	onChangeCollapse = chatWidth => {
+		// Function to send chat with from Chat to CanvasSpace
+		this.refs.canvasSpace.chatWidth = chatWidth;
+	}
 	render() {
 		return (
 			<div className="App">
 				<div id="mainContainer">
-					<CanvasSpace />
-					<Chat ref="chat" user={this.state.user} />
+					<CanvasSpace ref="canvasSpace"/>
+					<Chat ref="chat" onChangeCollapse={this.onChangeCollapse} user={this.state.user} />
 				</div>
 			</div>
 		);
