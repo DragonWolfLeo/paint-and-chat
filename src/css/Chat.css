@@ -12,29 +12,52 @@
 .chat{
 	position: relative;
 	border: black solid;
-	border-width: 0 0 0 3px;
+	border-width: 0 0 0 2px;
 	width: 100%;
 	height: 100%;
 	overflow: hidden;
 }
 .chatCollapseBtn{
 	position: absolute;
-	top: 0px;
+	top: 0;
 	right: 100%;
 	margin: 8px 0px;
 	padding: 12px 6px;
 	background: #6c6c8b;
 	font-size: 1.75rem;
-	border-radius: 8px 0px 0px 8px;
+	border-radius: 16px 0 0 16px;
 	border: black solid 2px;
 	border-right: 0px;
 	user-select: none;
 	cursor: pointer;
 }
+@keyframes chatNotificationPulse {
+   50% { 
+		background: #f15252; 
+		border-color: #cc3030;
+	}
+}
+@keyframes chatNotificationBounce {
+	0% { transform: scale(0.1) }
+	85% { transform: scale(1.1) }
+   	100% { transform: scale(1) }
+}
+.chatNotificationIndicator{
+	position: absolute;
+	border-radius: 100%;
+	background: #dd3030;
+	border: darkred solid 2px;
+	width: 20px;
+	height: 20px;
+	top: -5px;
+	left: -5px;
+	animation: chatNotificationPulse 5s ease-in-out 5s forwards infinite,
+		chatNotificationBounce 0.3s ease-out 0s forwards normal;
+}
 .chat li{
 	list-style: none;
 }
-ul{
+.chat ul{
 	margin: 0;
 	padding: 12px 8px;
 	overflow-wrap: break-word;

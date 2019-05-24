@@ -30,7 +30,6 @@ const ACTIONS = Object.freeze({
 });
 
 const STARTING_CHAT_WIDTH = 350;
-const STARTING_PAN = Object.freeze([-STARTING_CHAT_WIDTH/2,0]);
 
 class CanvasSpace extends React.Component{
 	constructor(props){

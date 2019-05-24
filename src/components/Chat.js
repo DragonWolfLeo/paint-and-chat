@@ -14,6 +14,7 @@ class Chat extends React.Component {
 		this.state = {
 			chatLog : [],
 			hidden: false,
+			newMessage: false,
 		}
 		api.onReceiveMessage((err, message) => {
 			this.addMessage(message);
@@ -64,8 +65,6 @@ class Chat extends React.Component {
 		if(target.value.length) {
 			api.postMessage(target.value);
 			if(user){
-				// const now = new Date();
-				// this.addMessage(`${now.toLocaleDateString()} ${now.toLocaleTimeString()} ${user.name}: ${target.value}`);
 				this.addMessage({
 					type: MESSAGE_TYPES.USER_MESSAGE,
 					message: target.value,
@@ -81,23 +80,30 @@ class Chat extends React.Component {
 		if(typeof(message) === "object" || message.length){
 			chatLog.push(message);
 			this.queuedScrollDown = true;
-			this.setState({
+			this.setState(prevState=>({
 				chatLog,
-			})
+				newMessage: prevState.hidden,
+			}))
 		}
 	}
 	onChangeCollapse = () => {
-		this.setState(prevState=>({hidden: !prevState.hidden}),()=>{
+		this.setState(prevState=>({
+			hidden: !prevState.hidden, 
+			newMessage: false,
+		}),()=>{
 			this.sendChatWidthToCanvasSpace();
 		});
 	}
 	sendChatWidthToCanvasSpace = () => {
 		// Send chat width to CanvasSpace
-		const {props: {onChangeCollapse}, state: {hidden}} = this;
-		onChangeCollapse && onChangeCollapse(hidden ? 0 : 350);
+		const {props: {getCanvasSpace}, state: {hidden}} = this;
+		const canvasSpace = getCanvasSpace && getCanvasSpace();
+		if(canvasSpace){
+			canvasSpace.chatWidth = hidden ? 0 : 350;
+		}
 	}
 	render(){
-		const {hidden} = this.state;
+		const {hidden, newMessage} = this.state;
 		return (
 			<div className={`chatContainer chat_${hidden ? "hide" : "show"}`}>
 				<div 
@@ -105,6 +111,10 @@ class Chat extends React.Component {
 					onClick={this.onChangeCollapse}
 				>
 					{hidden ? "◀" : "▶"}
+					{newMessage && (<div 
+						className="chatNotificationIndicator"
+						title="New messages"
+					></div>)}
 				</div>
 				<div className={`chat bg-navy flex flex-column`}>
 					<h3 className="bg-white-40 dib tl ma0 pa2">Dargon's Room</h3>

@@ -2,8 +2,8 @@ import React, { Component } from 'react';
 // import request from 'superagent';
 import "tachyons";
 import './css/App.css';
-import CanvasSpace from './components/CanvasSpace';
 import * as api from './api/api';
+import CanvasSpace from './components/CanvasSpace';
 import Chat from './components/Chat';
 
 // window.serverUrl = "http://localhost:3001";
@@ -42,17 +42,11 @@ class App extends Component {
 		const user = (window.location.search && window.location.search.substr(1)) || "user";
 		api.authenticate(user, "users_pass", "dargon_drawing_room");
 	}
-	onChangeCollapse = chatWidth => {
-		// Function to send chat with from Chat to CanvasSpace
-		this.refs.canvasSpace.chatWidth = chatWidth;
-	}
 	render() {
 		return (
 			<div className="App">
-				<div id="mainContainer">
-					<CanvasSpace ref="canvasSpace"/>
-					<Chat ref="chat" onChangeCollapse={this.onChangeCollapse} user={this.state.user} />
-				</div>
+				<CanvasSpace ref="canvasSpace"/>
+				<Chat ref="chat" getCanvasSpace={()=>this.refs.canvasSpace} user={this.state.user} />
 			</div>
 		);
 	}
