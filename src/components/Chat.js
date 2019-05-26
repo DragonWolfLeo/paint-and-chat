@@ -4,17 +4,75 @@ import '../css/Chat.css';
 
 // Constants
 const MESSAGE_TYPES = Object.freeze({
+	// Global
 	USER_MESSAGE: "user_message",
 	USER_JOIN: "user_join",
+	// Client-only
+	NEW_MESSAGE: "new_message",
 });
+
+class Node {
+	constructor(value, next = null, previous = null){
+		this.value = value;
+		this.next = next;
+		this.previous = previous;
+	}
+}
+class LinkedList {
+	constructor(){
+		this.head = null;
+		this.tail = null;
+		this.length = 0;
+	}
+	append(value){
+		const node = new Node(value, null, this.tail);
+		if(!this.length){
+			this.head = node;
+		} else {
+			this.tail.next = node;
+		}
+		this.tail = node;
+		this.length++;
+		return node;
+	}
+	prepend(value){
+		const node = new Node(value, this.head);
+		if(!this.length){
+			this.tail = node;
+		} else {
+			this.head.previous = node;
+		}
+		this.head = node;
+		this.length++;
+		return node;
+	}
+	detach(node){
+		if(!node){ return }
+		const {next, previous} = node;
+		node.next = null;
+		node.previous = null;
+		previous.next = next;
+		next.previous = previous;
+		return node;
+	}
+	toArray(){
+		const arr = [];
+		let next = this.head;
+		while(next){
+			arr.push(next.value);
+			next = next.next;
+		}
+		return arr;
+	}
+}
 
 class Chat extends React.Component {
 	constructor(){
 		super();
 		this.state = {
-			chatLog : [],
+			chatLog : new LinkedList(),
 			hidden: false,
-			newMessage: false,
+			newMessage: null,
 		}
 		api.onReceiveMessage((err, message) => {
 			this.addMessage(message);
@@ -22,42 +80,16 @@ class Chat extends React.Component {
 	}
 	queuedScrollDown = false;
 	componentDidUpdate() {
-		// Scroll last message into view
 		if(this.queuedScrollDown) {
-			const {children} = this.refs.chatList;
-			children[children.length-1].scrollIntoView();
+			// Scroll to unread messages or last message
+			const {chatList: {children}, newMessages} = this.refs;
+			(newMessages || children[children.length-1]).scrollIntoView();
 			this.queuedScrollDown = false;
 		}
 	}
 	componentDidMount() {
 		this.sendChatWidthToCanvasSpace();
-	}
-	renderChat = (...chat) => chat.map((msg,i) =>
-		(<ul key={i} className="stripe-dark">{
-			typeof(msg) === "object" ? (()=>{
-				switch(msg.type){
-					case MESSAGE_TYPES.USER_MESSAGE:
-						return (<div>
-							<span style={{
-								color: msg.user && msg.user.color,
-								fontWeight: "bold",
-							}}>{`${msg.user && msg.user.name}: `}</span>
-							{msg.message}
-						</div>);
-					case MESSAGE_TYPES.USER_JOIN:
-						return(<div style={{
-							color: msg.user && msg.user.color,
-							fontStyle: "italic",
-						}}>
-							<b>{msg.user && msg.user.name}</b>
-							{` has joined the room ${msg.room}.`}
-						</div>);
-					default:
-						return null;
-				}
-			})() : msg
-		}</ul>));
-	
+	}	
 	onClickSendMessage = (event) => {
 		event.preventDefault();
 		const {chatTextField: target} = this.refs;
@@ -76,21 +108,30 @@ class Chat extends React.Component {
 		}
 	}
 	addMessage = message => {
-		const {chatLog} = this.state;
+		const {chatLog, hidden, newMessage} = this.state;
 		if(typeof(message) === "object" || message.length){
-			chatLog.push(message);
+			const newState = {chatLog};
+			if(hidden && !newMessage){
+				const newMessage = chatLog.append({type: MESSAGE_TYPES.NEW_MESSAGE});
+				Object.assign(newState,{newMessage});
+			}
+			chatLog.append(message);
 			this.queuedScrollDown = true;
-			this.setState(prevState=>({
-				chatLog,
-				newMessage: prevState.hidden,
-			}))
+			this.setState(newState);
 		}
 	}
 	onChangeCollapse = () => {
-		this.setState(prevState=>({
-			hidden: !prevState.hidden, 
-			newMessage: false,
-		}),()=>{
+		const {hidden, chatLog, newMessage} = this.state;
+		const newState = {hidden: !hidden};
+		if(newMessage && !hidden){
+			// Clear new messages when closing
+			chatLog.detach(newMessage);
+			Object.assign(newState, {
+				newMessage: null,
+				chatLog,
+			});
+		}
+		this.setState(newState,()=>{
 			this.sendChatWidthToCanvasSpace();
 		});
 	}
@@ -102,6 +143,34 @@ class Chat extends React.Component {
 			canvasSpace.chatWidth = hidden ? 0 : 350;
 		}
 	}
+	
+	renderChat = (...chat) => chat.map((msg,i) =>
+		(<ul key={i}>{
+			typeof(msg) === "object" ? (()=>{
+				switch(msg.type){
+					case MESSAGE_TYPES.USER_MESSAGE:
+						return (<div className="userMessage">
+							<span className="userName" style={{
+								color: msg.user && msg.user.color,
+							}}>{`${msg.user && msg.user.name}: `}</span>
+							{msg.message}
+						</div>);
+					case MESSAGE_TYPES.USER_JOIN:
+						return(<div className="announcement" style={{
+							color: msg.user && msg.user.color,
+						}}>
+							<span className="userName">{msg.user && msg.user.name}</span>
+							{` has joined the room ${msg.room}.`}
+						</div>);
+					case MESSAGE_TYPES.NEW_MESSAGE:
+						return(<div ref="newMessages" className="newMessages">
+							NEW MESSAGES
+						</div>);
+					default:
+						return null;
+				}
+			})() : <div className="announcement">{msg}</div>
+		}</ul>));
 	render(){
 		const {hidden, newMessage} = this.state;
 		return (
@@ -111,15 +180,15 @@ class Chat extends React.Component {
 					onClick={this.onChangeCollapse}
 				>
 					{hidden ? "◀" : "▶"}
-					{newMessage && (<div 
+					{newMessage && hidden && (<div 
 						className="chatNotificationIndicator"
 						title="New messages"
 					></div>)}
 				</div>
 				<div className={`chat bg-navy flex flex-column`}>
-					<h3 className="bg-white-40 dib tl ma0 pa2">Dargon's Room</h3>
+					<h3 className="bg-white-40 dib tl ma0 pa2">Room</h3>
 					<li ref="chatList" className="bg-white-70 h-100 tl overflow-y-scroll">
-						{this.renderChat(...this.state.chatLog)}
+						{this.renderChat(...this.state.chatLog.toArray())}
 					</li>
 					<form className="flex bg-white-40 pv2">
 						<input ref="chatTextField" className="f4 w-100 mr1" type="text" placeholder="Chat..." autoComplete="off" defaultValue=""/> 

@@ -9,15 +9,6 @@ import Chat from './components/Chat';
 // window.serverUrl = "http://localhost:3001";
 
 class App extends Component {
-	// sendTestData() {
-	// 	request
-	// 		.post(window.serverUrl + '/api/rate-dargon')
-	// 		.send({ rating: 10 })
-	// 		.set('accept', 'json')
-	// 		.end((err, res) => {
-	// 			console.log("Received response from PaintWebAppServer!", res);
-	// 		});
-	// }
 	constructor(){
 		super();
 		this.state = {
@@ -40,7 +31,7 @@ class App extends Component {
 			this.refs.chat.addMessage(message);
 		});
 		const user = (window.location.search && window.location.search.substr(1)) || "user";
-		api.authenticate(user, "users_pass", "dargon_drawing_room");
+		api.authenticate(user, "users_pass", "test_room");
 	}
 	render() {
 		return (

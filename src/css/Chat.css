@@ -59,6 +59,26 @@
 }
 .chat ul{
 	margin: 0;
-	padding: 12px 8px;
+	padding: 2px 0;
 	overflow-wrap: break-word;
+}
+.chat ul>div{
+	padding: 6px 8px;
+}
+.chat .userName{
+	font-weight: bold;
+}
+.chat .announcement{
+	font-style: italic;
+}
+.chat .newMessages{
+	display: block;
+	padding: 2px 0;
+	color: red;
+	font-size: 0.8rem;
+	font-weight: bold;
+	text-align: center;
+	border: red solid;
+	border-width: 2px 0;
+	background: #00000020;
 }
