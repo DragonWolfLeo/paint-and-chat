@@ -74,11 +74,11 @@
 .chat .newMessages{
 	display: block;
 	padding: 2px 0;
-	color: red;
+	color: darkred;
 	font-size: 0.8rem;
 	font-weight: bold;
 	text-align: center;
 	border: red solid;
 	border-width: 2px 0;
-	background: #00000020;
+	background: #ff000020;
 }
