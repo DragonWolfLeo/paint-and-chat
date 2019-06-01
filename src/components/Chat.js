@@ -1,5 +1,4 @@
 import React from "react";
-import * as api from '../api/api';
 import '../css/Chat.css';
 import LinkedList from '../util/LinkedList';
 
@@ -21,9 +20,6 @@ class Chat extends React.Component {
 			hidden: false,
 			newMessage: null,
 		}
-		api.onReceiveMessage((err, message) => {
-			this.addMessage(message);
-		});
 	}
 	queuedScrollDown = false;
 	componentDidUpdate() {
@@ -36,13 +32,16 @@ class Chat extends React.Component {
 	}
 	componentDidMount() {
 		this.sendChatWidthToCanvasSpace();
+		this.props.connection.onReceiveMessage((err, message) => {
+			this.addMessage(message);
+		});
 	}	
 	onClickSendMessage = (event) => {
 		event.preventDefault();
 		const {chatTextField: target} = this.refs;
-		const {user} = this.props;
+		const {user, connection} = this.props;
 		if(target.value.length) {
-			api.postMessage(target.value);
+			connection.postMessage(target.value);
 			if(user){
 				this.addMessage({
 					type: MESSAGE_TYPES.USER_MESSAGE,

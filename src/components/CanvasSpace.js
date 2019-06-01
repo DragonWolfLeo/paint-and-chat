@@ -1,5 +1,4 @@
 import React from "react";
-import * as api from '../api/api';
 import '../css/CanvasSpace.css';
 
 // Utility functions
@@ -41,9 +40,6 @@ class CanvasSpace extends React.Component{
 			pan: this.getResetChatWidth(),
 		}
 		this.panPosition = [...this.state.pan];
-		api.onReceiveCanvas((err, data) => {
-			this.onReceiveCanvas(data);
-		});
 		// Mouse bindings; 
 		this.addMouseBinding(ACTIONS.PAN, [MOUSE.LEFT, KEY.SPACE], MOUSE.MIDDLE);
 		this.addMouseBinding(ACTIONS.DRAW, MOUSE.LEFT);
@@ -266,7 +262,7 @@ class CanvasSpace extends React.Component{
 		const {drawingCanvas, bufferCanvas} = this.refs;
 		const {nativeWidth, nativeHeight} = this.state;
 		drawingCanvas.toBlob(blob=>{
-			api.sendCanvas({blob});
+			this.props.connection.sendCanvas({blob});
 			// Move drawn art to buffer canvas
 			bufferCanvas.getContext("2d").drawImage(drawingCanvas,0,0);
 			drawingCanvas.getContext("2d").clearRect(0,0,nativeWidth, nativeHeight);
@@ -299,6 +295,9 @@ class CanvasSpace extends React.Component{
 	}
 	// Lifecycle hooks
 	componentDidMount(){
+		this.props.connection.onReceiveCanvas((err, data) => {
+			this.onReceiveCanvas(data);
+		});
 		document.body.onmousemove = this.onMouseMove;
 		document.body.onmouseup = this.onMouseUp;
 		document.body.onkeydown = this.onKeyDown;

@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 // import request from 'superagent';
 import "tachyons";
 import './css/App.css';
-import * as api from './api/api';
+import {joinRoom} from './api/api';
 import CanvasSpace from './components/CanvasSpace';
 import Chat from './components/Chat';
 
@@ -11,11 +11,12 @@ import Chat from './components/Chat';
 class App extends Component {
 	constructor(){
 		super();
+		const connection = joinRoom("test_room");
 		this.state = {
-			user: null,						
-			connectionActive: false,
+			user: null,		
+			connection,
 		}
-		api.onAuthenticate((err, authResponse) => {
+		connection.onAuthenticate((err, authResponse) => {
 			if(!authResponse)
 				authResponse = { error: "No response", user: {} };
 			let message = err
@@ -28,16 +29,22 @@ class App extends Component {
 					color: authResponse.user.color,
 				}
 			});
-			this.refs.chat.addMessage(message);
+			if(this.refs.chat)
+				this.refs.chat.addMessage(message);
 		});
 		const user = (window.location.search && window.location.search.substr(1)) || "user";
-		api.authenticate(user, "test_room");
+		connection.authenticate(user, "test_room");
 	}
 	render() {
+		const {connection, user} = this.state;
 		return (
 			<div className="App">
-				<CanvasSpace ref="canvasSpace"/>
-				<Chat ref="chat" getCanvasSpace={()=>this.refs.canvasSpace} user={this.state.user} />
+				{connection &&
+					<React.Fragment>
+						<CanvasSpace ref="canvasSpace" connection={connection}/>
+						<Chat ref="chat" connection={connection} getCanvasSpace={()=>this.refs.canvasSpace} user={user} />
+					</React.Fragment>
+				}
 			</div>
 		);
 	}
