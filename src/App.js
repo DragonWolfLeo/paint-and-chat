@@ -31,7 +31,7 @@ class App extends Component {
 			this.refs.chat.addMessage(message);
 		});
 		const user = (window.location.search && window.location.search.substr(1)) || "user";
-		api.authenticate(user, "users_pass", "test_room");
+		api.authenticate(user, "test_room");
 	}
 	render() {
 		return (

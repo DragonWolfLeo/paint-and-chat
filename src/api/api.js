@@ -1,9 +1,9 @@
-import openSocket from 'socket.io-client';
-const socket = openSocket('http://localhost:3001');
+import io from 'socket.io-client';
+const socket = io('http://localhost:3001/test_room');
 
-function authenticate(login, pass, room) {
+function authenticate(login, room) {
     socket.emit("auth", JSON.stringify({
-        login, pass, room,
+        login, room,
     }));
 }
 
