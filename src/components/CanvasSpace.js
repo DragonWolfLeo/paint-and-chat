@@ -1,5 +1,6 @@
 import React from "react";
 import '../css/CanvasSpace.css';
+import {eventListenerSetup} from '../util/util';
 
 // Utility functions
 // const addPositions = (arr1, arr2) => arr1.map((first, i) => first + arr2[i]);
@@ -295,21 +296,37 @@ class CanvasSpace extends React.Component{
 	}
 	// Lifecycle hooks
 	componentDidMount(){
-		this.props.connection.onReceiveCanvas((err, data) => {
-			this.onReceiveCanvas(data);
-		});
-		document.body.onmousemove = this.onMouseMove;
-		document.body.onmouseup = this.onMouseUp;
-		document.body.onkeydown = this.onKeyDown;
-		document.body.onkeyup = this.onKeyUp;
-
-		// Manually add onwheel listneer as a non-passive event
-		this.refs.canvasWindow.addEventListener('wheel', this.onWheel, {passive: false});
-
 		// Initialize main canvas
 		const ctx = this.refs.mainCanvas.getContext("2d", {alpha: false});
 		ctx.fillStyle="#ffffff";
 		ctx.fillRect(0,0,this.state.nativeWidth,this.state.nativeHeight);
+		
+		// Get event listener setup functions
+		const eventListenerSetups = [];
+		eventListenerSetups.push(eventListenerSetup(document.body,
+			["mousemove", this.onMouseMove],
+			["mouseup", this.onMouseUp],
+			["keydown", this.onKeyDown],
+			["keyup", this.onKeyUp],
+		));
+		eventListenerSetups.push(eventListenerSetup(this.refs.canvasWindow, 
+			["wheel", this.onWheel, {passive: false}]
+		));
+		eventListenerSetups.push(this.props.connection.onCanvasSetup(this.onReceiveCanvas));
+		// Add event listeners
+		eventListenerSetups.forEach(setup=>{
+			setup.add();
+		})
+		// Store event listeners to be removed on unmount
+		this.eventListenerSetups = eventListenerSetups;
+	}
+	componentWillUnmount(){
+		const {eventListenerSetups} = this;
+		if(eventListenerSetups){
+			eventListenerSetups.forEach(setup=>{
+				setup.remove();
+			})
+		}
 	}
 	render(){
 		const {nativeWidth, nativeHeight, pan} = this.state;

@@ -22,20 +22,7 @@ class Chat extends React.Component {
 		}
 	}
 	queuedScrollDown = false;
-	componentDidUpdate() {
-		if(this.queuedScrollDown) {
-			// Scroll to unread messages or last message
-			const {chatList: {children}, newMessages} = this.refs;
-			(newMessages || children[children.length-1]).scrollIntoView();
-			this.queuedScrollDown = false;
-		}
-	}
-	componentDidMount() {
-		this.sendChatWidthToCanvasSpace();
-		this.props.connection.onReceiveMessage((err, message) => {
-			this.addMessage(message);
-		});
-	}	
+	// Event handlers
 	onClickSendMessage = (event) => {
 		event.preventDefault();
 		const {chatTextField: target} = this.refs;
@@ -89,7 +76,26 @@ class Chat extends React.Component {
 			canvasSpace.chatWidth = hidden ? 0 : 350;
 		}
 	}
-	
+	// Lifecycle hooks
+	componentDidMount() {
+		this.sendChatWidthToCanvasSpace();
+		this.eventListenerSetup = this.props.connection.onReceiveMessageSetup(this.addMessage);
+		// Add event listeners
+		this.eventListenerSetup.add();
+	}
+	componentWillUnmount(){
+		// Remove event listeners
+		if(this.eventListenerSetup) this.eventListenerSetup.remove();
+	}
+	componentDidUpdate() {
+		if(this.queuedScrollDown) {
+			// Scroll to unread messages or last message
+			const {chatList: {children}, newMessages} = this.refs;
+			(newMessages || children[children.length-1]).scrollIntoView();
+			this.queuedScrollDown = false;
+		}
+	}
+	// Rendering
 	renderChat = (...chat) => chat.map((msg,i) =>
 		(<ul key={i}>{
 			typeof(msg) === "object" ? (()=>{
