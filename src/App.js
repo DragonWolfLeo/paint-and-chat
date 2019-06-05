@@ -52,7 +52,7 @@ class App extends Component {
 		const {connection, connectionActive, user} = this.state;
 		return (
 			<div className="App">
-				{connectionActive ?
+				{connectionActive && connection ?
 					<React.Fragment>
 						<CanvasSpace ref="canvasSpace" connection={connection}/>
 						<Chat ref="chat" connection={connection} getCanvasSpace={()=>this.refs.canvasSpace} user={user} />

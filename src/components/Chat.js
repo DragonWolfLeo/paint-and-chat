@@ -7,6 +7,7 @@ const MESSAGE_TYPES = Object.freeze({
 	// Global
 	USER_MESSAGE: "user_message",
 	USER_JOIN: "user_join",
+	USER_DISCONNECT: "user_disconnect",
 	// Client-only
 	NEW_MESSAGE: "new_message",
 });
@@ -112,7 +113,14 @@ class Chat extends React.Component {
 							color: msg.user && msg.user.color,
 						}}>
 							<span className="userName">{msg.user && msg.user.name}</span>
-							{` has joined the room ${msg.room}.`}
+							{` joined the room.`}
+						</div>);
+					case MESSAGE_TYPES.USER_DISCONNECT:
+						return(<div className="announcement" style={{
+							color: msg.user && msg.user.color,
+						}}>
+							<span className="userName">{msg.user && msg.user.name}</span>
+							{` left the room.`}
 						</div>);
 					case MESSAGE_TYPES.NEW_MESSAGE:
 						return(<div ref="newMessages" className="newMessages">
