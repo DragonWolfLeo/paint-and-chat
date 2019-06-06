@@ -1,9 +1,11 @@
 import io from 'socket.io-client';
+// import request from 'superagent';
 import {eventListenerSetup} from '../util/util';
 
+const serverUrl = "http://localhost:3001"
 class Connection {
     constructor(room) {
-        this.socket = io.connect(`http://localhost:3001/${room}`);
+        this.socket = io.connect(`${serverUrl}/${room}`);
     }
     // Adding event listeners
     onConnect = cb => {
@@ -28,9 +30,9 @@ class Connection {
     
     // Event emitters
     authenticate = (login, room) => {
-        this.socket.emit("auth", JSON.stringify({
-            login, room,
-        }));
+        // this.socket.emit("auth", JSON.stringify({
+        //     login, room,
+        // }));
     };
     postMessage = text => {
         this.socket.emit("message", text);
@@ -38,6 +40,35 @@ class Connection {
     sendCanvas = data => this.socket.emit("canvas", data);
 }
 
+const requestJoinRoom = (name, color, room) => {
+    fetch(`${serverUrl}/join/${room}`,{
+        method: "post",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            name, color
+        }),
+      })
+    .then(res=>res.json())
+    .then(console.log)
+    .catch(console.error);
+}
+const requestCreateRoom = (name, color) => {
+    return fetch(`${serverUrl}/create`,{
+        method: "post",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            name, color
+        }),
+      })
+    .then(res=>res.json())
+    .catch(console.error);
+}
 export {
     Connection,
+    requestJoinRoom,
+    requestCreateRoom,
 };

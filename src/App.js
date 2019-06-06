@@ -1,8 +1,7 @@
 import React, { Component } from 'react';
-// import request from 'superagent';
 import "tachyons";
 import './css/App.css';
-import {Connection} from './api/api';
+import {Connection, requestJoinRoom, requestCreateRoom} from './api/api';
 import CanvasSpace from './components/CanvasSpace';
 import Chat from './components/Chat';
 
@@ -46,7 +45,11 @@ class App extends Component {
 		this.setState({connection});
 	}
 	componentDidMount(){
-		this.joinRoom("room1");
+		requestCreateRoom("Test User", "#ff00ff")
+		.then(({room}) => {
+			this.joinRoom(room);
+		})
+		.catch(console.error);
 	}
 	render() {
 		const {connection, connectionActive, user} = this.state;
