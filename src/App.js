@@ -14,14 +14,14 @@ class App extends Component {
 			connectionActive: false,
 		}
 	}
-	joinRoom = room => {
-		const connection = new Connection(room);
+	joinRoom = (room, token) => {
+		const connection = new Connection(room, token);
 		connection.onAuthenticate((err, authResponse) => {
 			if(!authResponse)
-				authResponse = { error: "No response", user: {} };
+				err = { error: "No response" };
 			let message = err
 				? "Failed to authenticate. Error is: " + authResponse.error
-				: "Authentication success. Token is: " + authResponse.token;
+				: `Authentication success. Joined room: ${room}`;
 			this.setState({
 				connectionActive: err ? false: true,
 				user: {
@@ -34,7 +34,6 @@ class App extends Component {
 		});
 		connection.onConnect(()=>{
 			this.setState({connectionActive: true});
-			connection.authenticate(user, "test_room");
 			console.debug("Connected to server");
 		});
 		connection.onDisconnect(()=>{
@@ -46,8 +45,8 @@ class App extends Component {
 	}
 	componentDidMount(){
 		requestCreateRoom("Test User", "#ff00ff")
-		.then(({room}) => {
-			this.joinRoom(room);
+		.then(({room, token}) => {
+			this.joinRoom(room, token);
 		})
 		.catch(console.error);
 	}
