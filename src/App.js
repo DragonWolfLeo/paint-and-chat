@@ -14,7 +14,7 @@ class App extends Component {
 			connectionActive: false,
 		}
 	}
-	joinRoom = (room, token) => {
+	joinRoom = ({room, token}) => {
 		const connection = new Connection(room, token);
 		connection.onAuthenticate((err, authResponse) => {
 			if(!authResponse)
@@ -24,10 +24,7 @@ class App extends Component {
 				: `Authentication success. Joined room: ${room}`;
 			this.setState({
 				connectionActive: err ? false: true,
-				user: {
-					name: authResponse.user.name,
-					color: authResponse.user.color,
-				}
+				user: {...authResponse.user}
 			});
 			if(this.refs.chat)
 				this.refs.chat.addMessage(message);
@@ -40,15 +37,20 @@ class App extends Component {
 			this.setState({connectionActive: false});
 			console.debug("Disconnected from server");
 		});
-		const user = (window.location.search && window.location.search.substr(1)) || "user";
 		this.setState({connection});
 	}
-	componentDidMount(){
+	requestCreateRoom(){
 		requestCreateRoom("Test User", "#ff00ff")
-		.then(({room, token}) => {
-			this.joinRoom(room, token);
-		})
+		.then(this.joinRoom)
 		.catch(console.error);
+	}
+	requestJoinRoom(){
+		requestJoinRoom("Test User", "#ff00ff", "room1")
+		.then(this.joinRoom)
+		.catch(console.error);
+	}
+	componentDidMount(){
+		this.requestJoinRoom();
 	}
 	render() {
 		const {connection, connectionActive, user} = this.state;

@@ -1,11 +1,13 @@
 import io from 'socket.io-client';
-// import request from 'superagent';
 import {eventListenerSetup} from '../util/util';
 
-const serverUrl = "http://localhost:3001"
+// Constants
+const SERVER_URL = "http://localhost:3001";
+
+// Exports
 class Connection {
     constructor(room, token) {
-        this.socket = io.connect(`${serverUrl}/${room}`);
+        this.socket = io.connect(`${SERVER_URL}/${room}`);
         this.token = token;
     }
     // Adding event listeners
@@ -38,21 +40,20 @@ class Connection {
 }
 
 const requestJoinRoom = (name, color, room) => {
-    fetch(`${serverUrl}/join/${room}`,{
+    return fetch(`${SERVER_URL}/join/${room}`,{
         method: "post",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-            name, color
+            name, color, room
         }),
       })
     .then(res=>res.json())
-    .then(console.log)
     .catch(console.error);
 }
 const requestCreateRoom = (name, color) => {
-    return fetch(`${serverUrl}/create`,{
+    return fetch(`${SERVER_URL}/create`,{
         method: "post",
         headers: {
           "Content-Type": "application/json",
