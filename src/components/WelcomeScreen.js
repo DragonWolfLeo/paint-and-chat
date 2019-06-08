@@ -1,7 +1,7 @@
 import React from "react";
 import "../css/WelcomeScreen.css";
 import {requestJoinRoom, requestCreateRoom} from '../api/api';
-const button_class = "f5 link br2 ph3 pv2 mh1 dib white bg-dark-blue";
+const button_class = "f5 link br2 ph3 pv2 mh1 mv1 dib white bg-dark-blue";
 class WelcomeScreen extends React.Component {
 	joinRoom = response => {
 		if(response && response.alert){

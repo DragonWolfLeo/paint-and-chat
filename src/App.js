@@ -23,7 +23,7 @@ class App extends Component {
 				err = { error: "No response" };
 			let message = err
 				? "Failed to authenticate. Error is: " + authResponse.error
-				: `Authentication success. Joined room: ${room}`;
+				: `Welcome to the room. To invite your friends, give them this room ID: ${room}`;
 			this.setState({
 				connectionActive: err ? false: true,
 				user: {...authResponse.user},
