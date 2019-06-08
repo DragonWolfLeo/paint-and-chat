@@ -1,9 +1,10 @@
 import React, { Component } from 'react';
 import "tachyons";
 import './css/App.css';
-import {Connection, requestJoinRoom, requestCreateRoom} from './api/api';
+import {Connection} from './api/api';
 import CanvasSpace from './components/CanvasSpace';
 import Chat from './components/Chat';
+import WelcomeScreen from './components/WelcomeScreen';
 
 class App extends Component {
 	constructor(){
@@ -12,6 +13,7 @@ class App extends Component {
 			user: null,		
 			connection: null,
 			connectionActive: false,
+			room: null,
 		}
 	}
 	joinRoom = ({room, token}) => {
@@ -24,7 +26,8 @@ class App extends Component {
 				: `Authentication success. Joined room: ${room}`;
 			this.setState({
 				connectionActive: err ? false: true,
-				user: {...authResponse.user}
+				user: {...authResponse.user},
+				room,
 			});
 			if(this.refs.chat)
 				this.refs.chat.addMessage(message);
@@ -34,35 +37,22 @@ class App extends Component {
 			console.debug("Connected to server");
 		});
 		connection.onDisconnect(()=>{
-			this.setState({connectionActive: false});
+			this.setState({connectionActive: false, connection: null});
 			console.debug("Disconnected from server");
 		});
 		this.setState({connection});
 	}
-	requestCreateRoom(){
-		requestCreateRoom("Test User", "#ff00ff")
-		.then(this.joinRoom)
-		.catch(console.error);
-	}
-	requestJoinRoom(){
-		requestJoinRoom("Test User", "#ff00ff", "room1")
-		.then(this.joinRoom)
-		.catch(console.error);
-	}
-	componentDidMount(){
-		this.requestJoinRoom();
-	}
 	render() {
-		const {connection, connectionActive, user} = this.state;
+		const {connection, connectionActive, user, room} = this.state;
 		return (
-			<div className="App">
+			<div className={`App ${connection ? "overflowHidden": ""}`}>
 				{connectionActive && connection ?
 					<React.Fragment>
 						<CanvasSpace ref="canvasSpace" connection={connection}/>
-						<Chat ref="chat" connection={connection} getCanvasSpace={()=>this.refs.canvasSpace} user={user} />
+						<Chat ref="chat" connection={connection} room={room} getCanvasSpace={()=>this.refs.canvasSpace} user={user} />
 					</React.Fragment>
 					:
-					<div>Loading</div>
+					<WelcomeScreen joinRoom={this.joinRoom}/>
 				}
 			</div>
 		);

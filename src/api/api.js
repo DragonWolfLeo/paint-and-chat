@@ -38,33 +38,19 @@ class Connection {
     };
     sendCanvas = data => this.socket.emit("canvas", data);
 }
-
-const requestJoinRoom = (name, color, room) => {
-    return fetch(`${SERVER_URL}/join/${room}`,{
+const roomCall = (url, userProfile) => {
+    return fetch(url,{
         method: "post",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-            name, color, room
-        }),
+        body: JSON.stringify(userProfile),
       })
     .then(res=>res.json())
     .catch(console.error);
-}
-const requestCreateRoom = (name, color) => {
-    return fetch(`${SERVER_URL}/create`,{
-        method: "post",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-            name, color
-        }),
-      })
-    .then(res=>res.json())
-    .catch(console.error);
-}
+};
+const requestJoinRoom = (name, color, room) => roomCall(`${SERVER_URL}/join/${room}`, {name, color});
+const requestCreateRoom = (name, color) => roomCall(`${SERVER_URL}/create`, {name, color});
 export {
     Connection,
     requestJoinRoom,

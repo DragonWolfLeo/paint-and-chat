@@ -146,7 +146,7 @@ class Chat extends React.Component {
 					></div>)}
 				</div>
 				<div className={`chat bg-navy flex flex-column`}>
-					<h3 className="bg-white-40 dib tl ma0 pa2">Room</h3>
+					<h3 className="bg-white-40 dib tl ma0 pa2">{`Room: ${this.props.room}`}</h3>
 					<li ref="chatList" className="bg-white-70 h-100 tl overflow-y-scroll">
 						{this.renderChat(...this.state.chatLog.toArray())}
 					</li>
