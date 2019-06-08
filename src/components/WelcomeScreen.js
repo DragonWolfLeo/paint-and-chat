@@ -45,15 +45,17 @@ class WelcomeScreen extends React.Component {
 					<img className="logo" alt="logo" src="/images/logo.png" />
 				</div>
 				<div className="textContainer mb3 flex flex-column items-center">
-					<h1 className="mt0 mb3">Draw and chat online with friends!</h1>
-					<h3 className="mt0 mb3">To get started, choose a nickname and color.</h3>
-					<div className="pb3 mw6 w-100 flex justify-center items-center">
-							<input ref="nameInput" className="textInput f3" type="text" placeholder="Nickname" />
-							<input ref="colorInput" className="colorInput h-100" type="color" />
-					</div>
-					<div className="flex flex-wrap justify-center">
-						<button className={button_class} onClick={this.requestCreateRoom}>Create a Room</button>
-						<button className={button_class} onClick={this.requestJoinRoom}>Join a Room</button>
+					<div className="textBox">
+						<h1 className="mt0 mb3">Draw and chat online with friends!</h1>
+						<h3 className="mt0 mb3">To get started, choose a nickname and color.</h3>
+						<div className="pb3 mw6 w-100 flex justify-center items-center">
+								<input ref="nameInput" className="textInput f3" type="text" placeholder="Nickname" />
+								<input ref="colorInput" className="colorInput h-100" type="color" />
+						</div>
+						<div className="flex flex-wrap justify-center">
+							<button className={button_class} onClick={this.requestCreateRoom}>Create a Room</button>
+							<button className={button_class} onClick={this.requestJoinRoom}>Join a Room</button>
+						</div>
 					</div>
 				</div>
 			</header>

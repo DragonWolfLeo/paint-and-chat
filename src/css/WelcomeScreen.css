@@ -1,6 +1,7 @@
 .welcome {
 	height: 100%;
 	padding: 40px;
+	margin: 0;
 }
 .welcome .logo{
 	width: 100%;
@@ -12,6 +13,12 @@
 	height: fit-content;
 }
 .welcome .textContainer{
+	flex-basis: 400px;
+	flex-grow: 1;
+	flex-shrink: 1;
+	padding: 20px;
+}
+.welcome .textBox{
 	color: white;
 	text-shadow: black 2px 2px;
 	background: #5e5e8a;
@@ -19,9 +26,6 @@
 	box-shadow: black 8px 8px;
 	border-radius: 40px;
 	padding: 30px;
-	flex-basis: 400px;
-	flex-grow: 1;
-	flex-shrink: 1;
 }
 .welcome button {
 	position: relative;
