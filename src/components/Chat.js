@@ -103,20 +103,20 @@ class Chat extends React.Component {
 				switch(msg.type){
 					case MESSAGE_TYPES.USER_MESSAGE:
 						return (<div className="userMessage">
-							<span className="userName" style={{
+							<span className="userName colored" style={{
 								color: msg.user && msg.user.color,
 							}}>{`${msg.user && msg.user.name}: `}</span>
 							{msg.message}
 						</div>);
 					case MESSAGE_TYPES.USER_JOIN:
-						return(<div className="announcement" style={{
+						return(<div className="announcement colored" style={{
 							color: msg.user && msg.user.color,
 						}}>
 							<span className="userName">{msg.user && msg.user.name}</span>
 							{` joined the room.`}
 						</div>);
 					case MESSAGE_TYPES.USER_DISCONNECT:
-						return(<div className="announcement" style={{
+						return(<div className="announcement colored" style={{
 							color: msg.user && msg.user.color,
 						}}>
 							<span className="userName">{msg.user && msg.user.name}</span>

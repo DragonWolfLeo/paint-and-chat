@@ -1,6 +1,6 @@
 .welcome {
 	height: 100%;
-	padding: 40px 40px;
+	padding: 40px;
 }
 .welcome .logo{
 	width: 100%;
@@ -12,6 +12,13 @@
 	height: fit-content;
 }
 .welcome .textContainer{
+	color: white;
+	text-shadow: black 2px 2px;
+	background: #5e5e8a;
+	border: black 2px solid;
+	box-shadow: black 8px 8px;
+	border-radius: 40px;
+	padding: 30px;
 	flex-basis: 400px;
 	flex-grow: 1;
 	flex-shrink: 1;
