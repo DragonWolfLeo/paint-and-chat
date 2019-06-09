@@ -2,7 +2,7 @@ import io from 'socket.io-client';
 import {eventListenerSetup} from '../util/util';
 
 // Constants
-const SERVER_URL = "http://localhost:3001";
+const SERVER_URL = process.env.REACT_APP_SERVER_URL;
 
 // Exports
 class Connection {
