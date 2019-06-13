@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { Component, Fragment } from 'react';
 import "tachyons";
 import './css/App.css';
 import {Connection} from './api/api';
@@ -21,12 +21,13 @@ class App extends Component {
 		connection.onAuthenticate((err, authResponse) => {
 			if(!authResponse)
 				err = { error: "No response" };
+			const {user} = authResponse;
 			let message = err
 				? "Failed to authenticate. Error is: " + authResponse.error
-				: `Welcome to the room. To invite your friends, give them this room ID: ${room}`;
+				: `Welcome, ${user.name}! To invite your friends, give them this room ID: ${room}`;
 			this.setState({
 				connectionActive: err ? false: true,
-				user: {...authResponse.user},
+				user,
 				room,
 			});
 			if(this.refs.chat)
@@ -47,10 +48,10 @@ class App extends Component {
 		return (
 			<div className={`App ${connection ? "overflowHidden": ""}`}>
 				{connectionActive && connection ?
-					<React.Fragment>
+					<Fragment>
 						<CanvasSpace ref="canvasSpace" connection={connection}/>
 						<Chat ref="chat" connection={connection} room={room} getCanvasSpace={()=>this.refs.canvasSpace} user={user} />
-					</React.Fragment>
+					</Fragment>
 					:
 					<WelcomeScreen joinRoom={this.joinRoom}/>
 				}

@@ -36,6 +36,8 @@ class LinkedList {
 	detach(node){
 		if(!node){ return }
 		const {next, previous} = node;
+		if(this.head === node) this.head = next;
+		if(this.tail === node) this.tail = previous;
 		node.next = null;
 		node.previous = null;
 		previous.next = next;

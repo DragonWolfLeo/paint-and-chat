@@ -1,17 +1,8 @@
 import React from "react";
 import '../css/Chat.css';
 import LinkedList from '../util/LinkedList';
-
-// Constants
-const MESSAGE_TYPES = Object.freeze({
-	// Global
-	USER_MESSAGE: "user_message",
-	USER_JOIN: "user_join",
-	USER_DISCONNECT: "user_disconnect",
-	// Client-only
-	NEW_MESSAGE: "new_message",
-});
-
+import ChatList from '../components/ChatList';
+import {MESSAGE_TYPES} from '../constants';
 
 class Chat extends React.Component {
 	constructor(){
@@ -22,7 +13,6 @@ class Chat extends React.Component {
 			newMessage: null,
 		}
 	}
-	queuedScrollDown = false;
 	// Event handlers
 	onClickSendMessage = (event) => {
 		event.preventDefault();
@@ -35,22 +25,29 @@ class Chat extends React.Component {
 					type: MESSAGE_TYPES.USER_MESSAGE,
 					message: target.value,
 					user,
-					date: new Date(),
 				});
 			}
 			target.value = "";
+			// Clear new message banner
+			const {chatLog, newMessage} = this.state;
+			chatLog.detach(newMessage);
+			this.setState({newMessage: null, chatLog});
 		}
 	}
 	addMessage = message => {
 		const {chatLog, hidden, newMessage} = this.state;
+		const m = 
+			(typeof(message) === "object" && {...message}) ||
+			(typeof(message) === "string" && message.length && {message}) 
+		m.key = Math.random(); // Make a unique key
 		if(typeof(message) === "object" || message.length){
 			const newState = {chatLog};
 			if(hidden && !newMessage){
-				const newMessage = chatLog.append({type: MESSAGE_TYPES.NEW_MESSAGE});
+				const newMessage = chatLog.append({type: MESSAGE_TYPES.NEW_MESSAGE, key: "newMessage"});
 				Object.assign(newState,{newMessage});
 			}
-			chatLog.append(message);
-			this.queuedScrollDown = true;
+			chatLog.append(m);
+			this.refs.chatList.queueScrollDown();
 			this.setState(newState);
 		}
 	}
@@ -88,49 +85,7 @@ class Chat extends React.Component {
 		// Remove event listeners
 		if(this.eventListenerSetup) this.eventListenerSetup.remove();
 	}
-	componentDidUpdate() {
-		if(this.queuedScrollDown) {
-			// Scroll to unread messages or last message
-			const {chatList: {children}, newMessages} = this.refs;
-			(newMessages || children[children.length-1]).scrollIntoView();
-			this.queuedScrollDown = false;
-		}
-	}
 	// Rendering
-	renderChat = (...chat) => chat.map((msg,i) =>
-		(<ul key={i}>{
-			typeof(msg) === "object" ? (()=>{
-				switch(msg.type){
-					case MESSAGE_TYPES.USER_MESSAGE:
-						return (<div className="userMessage">
-							<span className="userName colored" style={{
-								color: msg.user && msg.user.color,
-							}}>{`${msg.user && msg.user.name}: `}</span>
-							{msg.message}
-						</div>);
-					case MESSAGE_TYPES.USER_JOIN:
-						return(<div className="announcement colored" style={{
-							color: msg.user && msg.user.color,
-						}}>
-							<span className="userName">{msg.user && msg.user.name}</span>
-							{` joined the room.`}
-						</div>);
-					case MESSAGE_TYPES.USER_DISCONNECT:
-						return(<div className="announcement colored" style={{
-							color: msg.user && msg.user.color,
-						}}>
-							<span className="userName">{msg.user && msg.user.name}</span>
-							{` left the room.`}
-						</div>);
-					case MESSAGE_TYPES.NEW_MESSAGE:
-						return(<div ref="newMessages" className="newMessages">
-							NEW MESSAGES
-						</div>);
-					default:
-						return null;
-				}
-			})() : <div className="announcement">{msg}</div>
-		}</ul>));
 	render(){
 		const {hidden, newMessage} = this.state;
 		return (
@@ -147,9 +102,7 @@ class Chat extends React.Component {
 				</div>
 				<div className={`chat bg-navy flex flex-column`}>
 					<h3 className="bg-white-40 dib tl ma0 pa2">{`Room: ${this.props.room}`}</h3>
-					<li ref="chatList" className="bg-white-70 h-100 tl overflow-y-scroll">
-						{this.renderChat(...this.state.chatLog.toArray())}
-					</li>
+					<ChatList ref="chatList" chatArray={this.state.chatLog.toArray()} />
 					<form className="flex bg-white-40 pv2">
 						<input ref="chatTextField" className="f4 w-100 mr1" type="text" placeholder="Chat..." autoComplete="off" defaultValue=""/> 
 						<button className="w4" onClick={this.onClickSendMessage}>Send</button>
@@ -159,5 +112,6 @@ class Chat extends React.Component {
 		);
 	}
 }
+
 
 export default Chat;

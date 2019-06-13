@@ -72,7 +72,7 @@
 	font-style: italic;
 }
 .chat .colored{
-	text-shadow: #0000002f 1px 1px;
+	text-shadow: #00000080 1px 1px;
 }
 .chat .newMessages{
 	display: block;
