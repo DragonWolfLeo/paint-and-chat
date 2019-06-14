@@ -21,7 +21,7 @@ class WelcomeScreen extends React.Component {
 	requestJoinRoom = () => {
 		const inputs = this.getInputs();
 		if(inputs){
-			const room = window.prompt("Enter room name.");
+			const room = window.prompt("Enter room name.").trim().substring(0,10);
 			if(room){
 				requestJoinRoom(...inputs, room)
 				.then(this.joinRoom)
@@ -30,7 +30,7 @@ class WelcomeScreen extends React.Component {
 		}
 	}
 	getInputs = () => {
-		const name = this.refs.nameInput.value;
+		const name = this.refs.nameInput.value.trim();
 		const color = this.refs.colorInput.value;
 		if(!name){
 			alert("Please enter a nickname.");
@@ -49,7 +49,7 @@ class WelcomeScreen extends React.Component {
 						<h1 className="mt0 mb3">Draw and chat online with friends!</h1>
 						<h3 className="mt0 mb3">To get started, choose a nickname and color.</h3>
 						<div className="pb3 mw6 w-100 flex justify-center items-center">
-								<input ref="nameInput" className="textInput f3" type="text" placeholder="Nickname" />
+								<input ref="nameInput" className="textInput f3" type="text" maxLength="20" placeholder="Nickname" />
 								<input ref="colorInput" className="colorInput h-100" type="color" />
 						</div>
 						<div className="flex flex-wrap justify-center">

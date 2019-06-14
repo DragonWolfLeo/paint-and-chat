@@ -74,6 +74,8 @@ class Chat extends React.Component {
 			canvasSpace.chatWidth = hidden ? 0 : 350;
 		}
 	}
+	onInput = event => {
+	}
 	// Lifecycle hooks
 	componentDidMount() {
 		this.sendChatWidthToCanvasSpace();
@@ -104,7 +106,7 @@ class Chat extends React.Component {
 					<h3 className="bg-white-40 dib tl ma0 pa2">{`Room: ${this.props.room}`}</h3>
 					<ChatList ref="chatList" chatArray={this.state.chatLog.toArray()} />
 					<form className="flex bg-white-40 pv2">
-						<input ref="chatTextField" className="f4 w-100 mr1" type="text" placeholder="Chat..." autoComplete="off" defaultValue=""/> 
+						<input ref="chatTextField" className="f4 w-100 mr1" type="text" placeholder="Chat..." autoComplete="off" defaultValue="" maxLength="1000"/> 
 						<button className="w4" onClick={this.onClickSendMessage}>Send</button>
 					</form>
 				</div>
