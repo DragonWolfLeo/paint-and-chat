@@ -225,6 +225,11 @@ class CanvasSpace extends React.Component{
 		const delta = [Math.cos(angle), Math.sin(angle)];
 		this.panWindow(...delta.map(num=>num*max));
 	}
+	resetPanAndZoom = () => {
+		// Reset pan position and zoom
+		const pan = this.getResetChatWidth();
+		this.setState({pan, zoom: 0},()=>this.panPosition = pan);
+	}
 	onKeyDown = event => {
 		if(event.target !== event.currentTarget){
 			// Cancel event if an input field is selected
@@ -235,17 +240,14 @@ class CanvasSpace extends React.Component{
 		let preventDefault = true;
 		switch(event.keyCode){
 			case KEY.ESC:
-				// Reset pan position
-				const pan = this.getResetChatWidth();
-				this.setState({pan},()=>this.panPosition = pan);
+				this.resetPanAndZoom();
 				break;
 			case KEY.SPACE:
 				// Used by PAN
 				break;
 			case KEY.NUM_0:
-				// Reset zoom
 				if(event.ctrlKey && this.mouseIsOverCanvasWindow){
-					this.setState({zoom: 0});
+					this.resetPanAndZoom();
 				} else {
 					preventDefault = false;
 				}
