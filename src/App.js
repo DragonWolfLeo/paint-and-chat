@@ -1,20 +1,34 @@
 import React, { Component, Fragment } from 'react';
 import "tachyons";
 import './css/App.css';
-import {Connection} from './api/api';
+import {Connection, checkRoom} from './api/api';
 import CanvasSpace from './components/CanvasSpace';
 import Chat from './components/Chat';
 import WelcomeScreen from './components/WelcomeScreen';
 
+// Utility functions
+const setPath = (room = "", replace = false) => 
+	window.history[replace ? "replaceState" : "pushState"]({room}, "", `/${room}`);
+
 class App extends Component {
-	constructor(){
-		super();
+	constructor(props){
+		super(props);
+		const room = window.location.pathname.substring(1) || null; // Get room from path
 		this.state = {
 			user: null,		
 			connection: null,
 			connectionActive: false,
-			room: null,
+			room,
 		}
+		if(room) checkRoom(room).then(exists=>{
+			if(exists){
+				// Join room automatically if session still exists
+			}else{
+				setPath(true);
+			}
+		});
+	}
+	componentDidMount() {
 	}
 	joinRoom = ({room, token}) => {
 		const connection = new Connection(room, token);
@@ -24,7 +38,7 @@ class App extends Component {
 			const {user} = authResponse;
 			let message = err
 				? "Failed to authenticate. Error is: " + authResponse.error
-				: `Welcome, ${user.name}! To invite your friends, give them this room ID: ${room}`;
+				: `Welcome, ${user.name}! To invite your friends, share the URL.`;
 			this.setState({
 				connectionActive: err ? false: true,
 				user,
@@ -41,7 +55,10 @@ class App extends Component {
 			this.setState({connectionActive: false, connection: null});
 			console.debug("Disconnected from server");
 		});
-		this.setState({connection});
+		this.setState({connection},()=>setPath(room));
+	}
+	declineRoom = () => {
+		this.setState({room: null},()=>setPath());
 	}
 	render() {
 		const {connection, connectionActive, user, room} = this.state;
@@ -53,7 +70,7 @@ class App extends Component {
 						<Chat ref="chat" connection={connection} room={room} getCanvasSpace={()=>this.refs.canvasSpace} user={user} />
 					</Fragment>
 					:
-					<WelcomeScreen joinRoom={this.joinRoom}/>
+					<WelcomeScreen joinRoom={this.joinRoom} declineRoom={this.declineRoom}room={room}/>
 				}
 			</div>
 		);

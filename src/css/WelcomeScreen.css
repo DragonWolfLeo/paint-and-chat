@@ -31,11 +31,13 @@
 	position: relative;
 	font-family: 'Montserrat', sans-serif;
 	color: white;
-	background: #2a2746;
 	background: linear-gradient(#514d77,#2a2746);
 	width: 12rem;
 	height: 3rem;
 	border: black 2px solid;
+}
+.welcome .declineButton {
+	background: linear-gradient(#b34747,#881b1b);
 }
 .welcome button:after{
 	content: "";

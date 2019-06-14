@@ -51,8 +51,15 @@ const roomCall = (url, userProfile) => {
 };
 const requestJoinRoom = (name, color, room) => roomCall(`${SERVER_URL}/join/${room}`, {name, color});
 const requestCreateRoom = (name, color) => roomCall(`${SERVER_URL}/create`, {name, color});
+// Check if rooms exists; Returns true or fase
+const checkRoom = (room) => {
+    return fetch(`${SERVER_URL}/check/${room}`)
+    .then(res=>res.json())
+    .catch(console.error);
+};
 export {
     Connection,
     requestJoinRoom,
     requestCreateRoom,
+    checkRoom,
 };
