@@ -103,7 +103,9 @@ class Chat extends React.Component {
 					></div>)}
 				</div>
 				<div className={`chat bg-navy flex flex-column`}>
-					<h3 className="bg-white-40 dib tl ma0 pa2">{`Room: ${this.props.room}`}</h3>
+					<div className="bg-white-40 dib tl pa2 flex">
+						<h3 className="ma0" >{`Room: ${this.props.room}`}</h3>
+					</div>
 					<ChatList ref="chatList" chatArray={this.state.chatLog.toArray()} />
 					<form className="flex bg-white-40 pv2">
 						<input ref="chatTextField" className="f4 w-100 mr1" type="text" placeholder="Chat..." autoComplete="off" defaultValue="" maxLength="1000"/> 

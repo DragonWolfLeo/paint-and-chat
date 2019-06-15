@@ -1,20 +1,19 @@
 .welcome {
 	height: 100%;
-	padding: 40px;
+	padding: 40px 20px;
 	margin: 0;
 }
 .welcome .logo{
 	width: 100%;
+	max-width: 400px;
 }
 .welcome .logoContainer{
-	flex-basis: 400px;
-	flex-grow: 0;
+	flex-grow: 1;
 	flex-shrink: 1;
-	height: fit-content;
 }
 .welcome .textContainer{
 	flex-basis: 400px;
-	flex-grow: 1;
+	flex-grow: 3;
 	flex-shrink: 1;
 	padding: 20px;
 }

@@ -55,7 +55,7 @@ class Signin extends React.Component {
 					<h1 className="mt0 mb3">
 						{
 							room ? 
-							"You're invited to draw!":
+							"You're invited to paint!":
 							"Draw and chat online with friends!"
 						}
 					</h1>

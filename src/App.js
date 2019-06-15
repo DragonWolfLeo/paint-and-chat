@@ -7,8 +7,11 @@ import Chat from './components/Chat';
 import WelcomeScreen from './components/WelcomeScreen';
 
 // Utility functions
-const setPath = (room = "", replace = false) => 
-	window.history[replace ? "replaceState" : "pushState"]({room}, "", `/${room}`);
+const setPath = (room = "", replace = false) => {
+	if(window.location.pathname !== `/${room}`){
+		window.history[replace ? "replaceState" : "pushState"]({room}, "", `/${room}`);
+	}
+}
 
 class App extends Component {
 	constructor(props){
@@ -38,6 +41,13 @@ class App extends Component {
 				this.setState(newState);
 			});
 		}
+	}
+	componentDidMount() {
+		window.addEventListener("popstate", this.onPopState);
+	}
+	onPopState = event =>{
+		const room = event.state && event.state.room; 
+		this.setState({room: room || null, connectionActive: room ? true : false});
 	}
 	joinRoom = ({room, token}) => {
 		const connection = new Connection(room, token);
