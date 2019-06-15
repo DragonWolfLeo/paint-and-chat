@@ -14,21 +14,30 @@ class App extends Component {
 	constructor(props){
 		super(props);
 		const room = window.location.pathname.substring(1) || null; // Get room from path
+		const token =  window.sessionStorage.getItem("token"); // Get token from session storage
 		this.state = {
 			user: null,		
 			connection: null,
 			connectionActive: false,
 			room,
+			awaiting: room !== null,
 		}
-		if(room) checkRoom(room).then(exists=>{
-			if(exists){
-				// Join room automatically if session still exists
-			}else{
-				setPath(true);
-			}
-		});
-	}
-	componentDidMount() {
+		if(room) {
+			checkRoom(room, token).then(response=>{
+				const newState = {awaiting: false};
+				if(response){
+					// Join room automatically if session still exists
+					if(response.authorized){
+						this.joinRoom({room, token});
+						return; // Skip setting state
+					}
+				}else{
+					newState.room = null;
+					setPath("", true);
+				}
+				this.setState(newState);
+			});
+		}
 	}
 	joinRoom = ({room, token}) => {
 		const connection = new Connection(room, token);
@@ -48,7 +57,8 @@ class App extends Component {
 				this.refs.chat.addMessage(message);
 		});
 		connection.onConnect(()=>{
-			this.setState({connectionActive: true});
+			this.setState({connectionActive: true, awaiting: false});
+			window.sessionStorage.setItem("token", token);
 			console.debug("Connected to server");
 		});
 		connection.onDisconnect(()=>{
@@ -61,7 +71,7 @@ class App extends Component {
 		this.setState({room: null},()=>setPath());
 	}
 	render() {
-		const {connection, connectionActive, user, room} = this.state;
+		const {connection, connectionActive, user, room, awaiting} = this.state;
 		return (
 			<div className={`App ${connection ? "overflowHidden": ""}`}>
 				{connectionActive && connection ?
@@ -70,7 +80,7 @@ class App extends Component {
 						<Chat ref="chat" connection={connection} room={room} getCanvasSpace={()=>this.refs.canvasSpace} user={user} />
 					</Fragment>
 					:
-					<WelcomeScreen joinRoom={this.joinRoom} declineRoom={this.declineRoom}room={room}/>
+					<WelcomeScreen joinRoom={this.joinRoom} declineRoom={this.declineRoom} room={room} awaiting={awaiting}/>
 				}
 			</div>
 		);
