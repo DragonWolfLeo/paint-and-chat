@@ -37,6 +37,9 @@ class Connection {
         this.socket.emit("message", text);
     };
     sendCanvas = data => this.socket.emit("canvas", data);
+
+    // Disconnecting
+    disconnect = () => this.socket.disconnect();
 }
 const roomCall = (url, userProfile) => {
     return fetch(url,{

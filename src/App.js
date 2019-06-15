@@ -9,45 +9,66 @@ import WelcomeScreen from './components/WelcomeScreen';
 // Utility functions
 const setPath = (room = "", replace = false) => {
 	if(window.location.pathname !== `/${room}`){
-		window.history[replace ? "replaceState" : "pushState"]({room}, "", `/${room}`);
+		window.history[replace ? "replaceState" : "pushState"](null, "", `/${room}`);
 	}
 }
+const getRoomFromPathname = () => window.location.pathname.substring(1) || "";
 
 class App extends Component {
 	constructor(props){
 		super(props);
-		const room = window.location.pathname.substring(1) || null; // Get room from path
-		const token =  window.sessionStorage.getItem("token"); // Get token from session storage
+		const room = getRoomFromPathname();
 		this.state = {
 			user: null,		
 			connection: null,
 			connectionActive: false,
 			room,
-			awaiting: room !== null,
+			awaiting: room ? true : false,
 		}
-		if(room) {
-			checkRoom(room, token).then(response=>{
-				const newState = {awaiting: false};
-				if(response){
-					// Join room automatically if session still exists
-					if(response.authorized){
-						this.joinRoom({room, token});
-						return; // Skip setting state
-					}
-				}else{
-					newState.room = null;
-					setPath("", true);
+		setPath(room, true); // Set current history state
+		if(room) this.attemptRejoinSession(room);
+	}
+	attemptRejoinSession = room => {
+		const token =  window.sessionStorage.getItem("token"); // Get token from session storage
+		checkRoom(room, token).then(response=>{
+			const newState = {awaiting: false};
+			if(response){
+				// Join room automatically if session still exists
+				if(response.authorized){
+					this.joinRoom({room, token});
+					return; // Skip setting state
 				}
-				this.setState(newState);
-			});
-		}
+			}else{
+				newState.room = null;
+				setPath("", true);
+			}
+			this.setState(newState);
+		});
 	}
 	componentDidMount() {
 		window.addEventListener("popstate", this.onPopState);
 	}
 	onPopState = event =>{
-		const room = event.state && event.state.room; 
-		this.setState({room: room || null, connectionActive: room ? true : false});
+		const room = getRoomFromPathname();
+		const {connection} = this.state;
+		if(room){
+			if(connection) connection.disconnect(); // Close current connection if any
+			this.setState({
+				room,
+				connection: null,
+				connectionActive: false,
+			},()=>{
+				// Join session
+				this.attemptRejoinSession(room);
+			})
+		} else {
+			if(connection) connection.disconnect();
+			this.setState({
+				room: null,
+				connection: null,
+				connectionActive: false,
+			});
+		}
 	}
 	joinRoom = ({room, token}) => {
 		const connection = new Connection(room, token);
@@ -69,11 +90,9 @@ class App extends Component {
 		connection.onConnect(()=>{
 			this.setState({connectionActive: true, awaiting: false});
 			window.sessionStorage.setItem("token", token);
-			console.debug("Connected to server");
 		});
 		connection.onDisconnect(()=>{
 			this.setState({connectionActive: false, connection: null});
-			console.debug("Disconnected from server");
 		});
 		this.setState({connection},()=>setPath(room));
 	}

@@ -21,9 +21,9 @@ class Signin extends React.Component {
 	requestJoinRoom = () => {
 		const inputs = this.getInputs();
 		if(inputs){
-			const room = this.props.room || window.prompt("Enter room name.").trim().substring(0,10);
+			const room = this.props.room || window.prompt("Enter room name.");
 			if(room){
-				requestJoinRoom(...inputs, room)
+				requestJoinRoom(...inputs, room.trim().substring(0,10))
 				.then(this.joinRoom)
 				.catch(console.error);
 			}
