@@ -72,15 +72,11 @@ class App extends Component {
 	}
 	joinRoom = ({room, token}) => {
 		const connection = new Connection(room, token);
-		connection.onAuthenticate((err, authResponse) => {
-			if(!authResponse)
-				err = { error: "No response" };
-			const {user} = authResponse;
-			let message = err
-				? "Failed to authenticate. Error is: " + authResponse.error
-				: `Welcome, ${user.name}! To invite your friends, share the URL.`;
+		connection.onAuthenticate(authResponse => {
+			const {user, error} = authResponse;
+			let message = error || `Welcome, ${user.name}! To invite your friends, share the URL.`;
 			this.setState({
-				connectionActive: err ? false: true,
+				connectionActive: error ? false: true,
 				user,
 				room,
 			});

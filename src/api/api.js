@@ -21,10 +21,10 @@ class Connection {
     };
     onAuthenticate = cb => {
         this.socket.on("auth", authResponse => {
-            if (authResponse.error)
-                cb("Failed to authenticate: " + authResponse.error, null);
+            if (!authResponse)
+                cb({error: "Failed to authenticate: No response."});
             else
-                cb(null, authResponse);
+                cb(authResponse);
         });
     };
 
