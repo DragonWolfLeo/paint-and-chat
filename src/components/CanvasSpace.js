@@ -53,7 +53,13 @@ class CanvasSpace extends React.Component{
 	mousePosition = null; // The mouse location relative to the canvas
 	windowPosition = null; // The mouse location relative to the window
 	panPosition = null; // The current pan, stored here to be independent of the state's asynchronous nature
-	drawingDirty = false;
+	canvasState = {
+		dirty: false,
+		minX: 0,
+		maxX: 0,
+		minY: 0,
+		maxY: 0,
+	}
 	chatWidth = STARTING_CHAT_WIDTH;
 
 	// Controls
@@ -93,13 +99,23 @@ class CanvasSpace extends React.Component{
 			return ()=>null;
 		})()(event);
 	}
-	onControlActivate = control => {
-	}
-	onControlDeactivate = control => {
+	onControlActivate = (control, event) => {
 		switch(control){
 			case ACTIONS.DRAW:
-				if(this.drawingDirty){
-					this.drawingDirty = false;
+				// Init boundary size
+				const c = this.canvasState;
+				const pos = this.getMousePosition(event, this.refs.drawingCanvas);
+				[c.minX, c.minY] = pos;
+				[c.maxX, c.maxY] = pos;
+				return;
+			default: return;
+		}
+	}
+	onControlDeactivate = (control, event) => {
+		switch(control){
+			case ACTIONS.DRAW:
+				if(this.canvasState.dirty){
+					this.canvasState.dirty = false;
 					this.sendCanvas();
 				}
 				return;
@@ -109,7 +125,7 @@ class CanvasSpace extends React.Component{
 	onMouseOver = event => this.mouseIsOverCanvasWindow = true;
 	onMouseOut = event => this.mouseIsOverCanvasWindow = false;
 	onDrawLine = event => {
-		this.drawingDirty = true;
+		this.canvasState.dirty = true;
 		const currentPosition = this.getMousePosition(event, this.refs.drawingCanvas)
 		if (!this.mousePosition) {
 			// Save previous position
@@ -117,6 +133,12 @@ class CanvasSpace extends React.Component{
 			return;
 		}
 		const ctx = this.refs.drawingCanvas.getContext("2d");
+		// Expand export boundary
+		const c = this.canvasState;
+		c.minX = Math.min(c.minX, currentPosition[0]);
+		c.maxX = Math.max(c.maxX, currentPosition[0]);
+		c.minY = Math.min(c.minY, currentPosition[1]);
+		c.maxY = Math.max(c.maxY, currentPosition[1]);
 
 		// Draw a line
 		ctx.fillStyle = "#000000";
@@ -162,7 +184,7 @@ class CanvasSpace extends React.Component{
 		mbind && mbind.forEach(({name, key})=>{
 			if(this.keyIsPressed[key]){
 				this.controlActive[name] = true;
-				this.onControlActivate(name);
+				this.onControlActivate(name, event);
 				keyActive = true;
 			}
 		});
@@ -172,7 +194,7 @@ class CanvasSpace extends React.Component{
 			const mbind = this.unkeyedMouseControls[event.button];
 			mbind && mbind.forEach(({name})=>{
 				this.controlActive[name] = true;
-				this.onControlActivate(name);
+				this.onControlActivate(name, event);
 			});
 		}
 	}
@@ -185,7 +207,7 @@ class CanvasSpace extends React.Component{
 		mbind && mbind.forEach(({name, key})=>{
 			this.controlActive[name] = false;
 			this.keyIsPressed[key] && (keyWasActive = true);
-			this.onControlDeactivate(name);
+			this.onControlDeactivate(name, event);
 		});
 
 		// If no keyed bindings were deactivated, disable unkeyed
@@ -193,7 +215,7 @@ class CanvasSpace extends React.Component{
 			const mbind = this.unkeyedMouseControls[event.button];
 			mbind && mbind.forEach(({name})=>{
 				this.controlActive[name] = false;
-				this.onControlDeactivate(name);
+				this.onControlDeactivate(name, event);
 			});
 		}
 
@@ -262,10 +284,35 @@ class CanvasSpace extends React.Component{
 		this.keyIsPressed[event.keyCode] = false;
 	}
 	sendCanvas = () => {
-		const {drawingCanvas, bufferCanvas} = this.refs;
+		const {drawingCanvas, bufferCanvas, exportCanvas} = this.refs;
 		const {nativeWidth, nativeHeight} = this.state;
-		drawingCanvas.toBlob(blob=>{
-			this.props.connection.sendCanvas({blob});
+		let {minX, maxX, minY, maxY} = this.canvasState;
+		// Clamp to canvas boundaries
+		const bleed = 3; // TODO: Make this adjust to brush size
+		minX = Math.floor(Math.max(minX-bleed, 0));
+		maxX = Math.ceil(Math.min(maxX+bleed, nativeWidth));
+		minY = Math.floor(Math.max(minY-bleed, 0));
+		maxY = Math.ceil(Math.min(maxY+bleed, nativeHeight));
+		// Resize to minimum
+		const width = maxX - minX;
+		const height = maxY - minY;
+ 		// Check if size is valid
+		if(width <= 0 || height <= 0) return;
+		// Draw on exportCanvas
+		exportCanvas.width = width;
+		exportCanvas.height = height;
+		const eCtx = exportCanvas.getContext("2d");
+		eCtx.clearRect(0,0,exportCanvas.width,exportCanvas.height);
+		eCtx.drawImage(drawingCanvas,minX,minY,width,height,0,0,width,height);
+		// Convert exportCanvas to blob
+		exportCanvas.toBlob(blob=>{
+			this.props.connection.sendCanvas({
+				blob,
+				x: minX,
+				y: minY,
+				width,
+				height,
+			});
 			// Move drawn art to buffer canvas
 			bufferCanvas.getContext("2d").drawImage(drawingCanvas,0,0);
 			drawingCanvas.getContext("2d").clearRect(0,0,nativeWidth, nativeHeight);
@@ -273,15 +320,16 @@ class CanvasSpace extends React.Component{
 	}
 	onReceiveCanvas = data => {
 		if(!data){
-			console.log("Error: No data received");
+			return console.error("Error: No data received");
 		}
+		const {buffer, x, y, width, height} = data;
 		const {mainCanvas, bufferCanvas} = this.refs;
 		const {nativeWidth, nativeHeight} = this.state;
 		const img = document.createElement("img");
-		const url = URL.createObjectURL(new	 Blob([new Uint8Array(data.blob)], {type: "image/png"}));
+		const url = URL.createObjectURL(new Blob([new Uint8Array(buffer)], {type: "image/png"}));
 		img.onload = () => {
 			// Draw onto main canvas
-			mainCanvas.getContext("2d", {alpha: false}).drawImage(img,0,0);
+			mainCanvas.getContext("2d", {alpha: false}).drawImage(img, x, y, width, height);
 			// Clear buffer canvas
 			bufferCanvas.getContext("2d").clearRect(0,0,nativeWidth, nativeHeight);
 			// Revoke url
@@ -333,17 +381,17 @@ class CanvasSpace extends React.Component{
 	render(){
 		const {nativeWidth, nativeHeight, pan} = this.state;
 		const scale = this.getScale();
-		// Set up canvas style (organized to reduce math)
+		// Set up canvas style
+		const width = Math.round(nativeWidth * scale);
+		const height = Math.round(nativeHeight * scale);
 		const style = {
-			width: Math.round(nativeWidth * scale),
-			height: Math.round(nativeHeight * scale),
+			width,
+			height,
+			left: -width/2,
+			top: -height/2,
 			position: "absolute",
 			imageRendering: scale < 2 ? "auto" : "crisp-edges",
 		};
-		Object.assign(style, {
-			left: -style.width/2,
-			top: -style.height/2,
-		});
 		// Make canvas function
 		const makeCanvas = ref => (
 			<canvas 
@@ -375,6 +423,8 @@ class CanvasSpace extends React.Component{
 						"drawingCanvas",
 					].map(makeCanvas)}
 				</div>
+				{/* Invisible canvas for export data */}
+				<canvas class="dn" ref="exportCanvas"/>
 			</div>
 		);
 	}
