@@ -35,8 +35,8 @@ class CanvasSpace extends React.Component{
 	constructor(props){
 		super(props);
 		this.state = {
-			nativeWidth: 400,
-			nativeHeight: 400,
+			nativeWidth: 0,
+			nativeHeight: 0,
 			zoom: 0,
 			pan: this.getResetChatWidth(),
 		}
@@ -322,14 +322,22 @@ class CanvasSpace extends React.Component{
 		if(!data){
 			return console.error("Error: No data received");
 		}
-		const {buffer, x, y, width, height} = data;
+		const {buffer, x, y, width, height, setWidth, setHeight} = data;
+		// Check if resize is emitted
+		if(setWidth && setHeight){
+			this.setState({nativeWidth: setWidth, nativeHeight: setHeight}, ()=>{
+				this.initCanvas(setWidth,setHeight);
+				this.onReceiveCanvas({buffer,x,y,width,height})
+			});
+			return;
+		}
 		const {mainCanvas, bufferCanvas} = this.refs;
 		const {nativeWidth, nativeHeight} = this.state;
 		const img = document.createElement("img");
 		const url = URL.createObjectURL(new Blob([new Uint8Array(buffer)], {type: "image/png"}));
 		img.onload = () => {
 			// Draw onto main canvas
-			mainCanvas.getContext("2d", {alpha: false}).drawImage(img, x, y, width, height);
+			mainCanvas.getContext("2d", {alpha: false}).drawImage(img, 0, 0, width, height, x, y, width, height);
 			// Clear buffer canvas
 			bufferCanvas.getContext("2d").clearRect(0,0,nativeWidth, nativeHeight);
 			// Revoke url
@@ -344,13 +352,14 @@ class CanvasSpace extends React.Component{
 	getResetChatWidth = () => {
 		return [-this.chatWidth/2, 0];
 	}
-	// Lifecycle hooks
-	componentDidMount(){
+	initCanvas = (width, height) => {
 		// Initialize main canvas
 		const ctx = this.refs.mainCanvas.getContext("2d", {alpha: false});
 		ctx.fillStyle="#ffffff";
-		ctx.fillRect(0,0,this.state.nativeWidth,this.state.nativeHeight);
-		
+		ctx.fillRect(0,0,width,height);
+	}
+	// Lifecycle hooks
+	componentDidMount(){
 		// Get event listener setup functions
 		const eventListenerSetups = [];
 		eventListenerSetups.push(eventListenerSetup(document.body,
@@ -424,7 +433,7 @@ class CanvasSpace extends React.Component{
 					].map(makeCanvas)}
 				</div>
 				{/* Invisible canvas for export data */}
-				<canvas class="dn" ref="exportCanvas"/>
+				<canvas className="dn" ref="exportCanvas"/>
 			</div>
 		);
 	}
