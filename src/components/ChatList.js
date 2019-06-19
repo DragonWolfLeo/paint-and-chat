@@ -14,7 +14,7 @@ class ChatList extends React.Component {
 		}
 	}
 	render() { 
-		return <li ref="chatList" className="bg-white-70 h-100 tl overflow-y-scroll">
+		return <li ref="chatList" className="applightbg h-100 tl overflow-y-scroll">
 			{this.props.chatArray.map(msg =>
 				<ul key={msg.key}>{(()=>{
 					switch(msg.type){

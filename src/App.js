@@ -1,4 +1,4 @@
-import React, { Component, Fragment } from 'react';
+import React, { Component } from 'react';
 import "tachyons";
 import './css/App.css';
 import {Connection, checkRoom} from './api/api';
@@ -100,10 +100,10 @@ class App extends Component {
 		return (
 			<div className={`App ${connection ? "overflowHidden": ""}`}>
 				{connectionActive && connection ?
-					<Fragment>
+					<React.Fragment>
 						<CanvasSpace ref="canvasSpace" connection={connection}/>
 						<Chat ref="chat" connection={connection} room={room} getCanvasSpace={()=>this.refs.canvasSpace} user={user} />
-					</Fragment>
+					</React.Fragment>
 					:
 					<WelcomeScreen joinRoom={this.joinRoom} declineRoom={this.declineRoom} room={room} awaiting={awaiting}/>
 				}

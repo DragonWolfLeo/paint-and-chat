@@ -1,5 +1,6 @@
 import React from "react";
 import '../css/CanvasSpace.css';
+import Toolbox from './Toolbox';
 import {eventListenerSetup} from '../util/util';
 
 // Utility functions
@@ -413,27 +414,30 @@ class CanvasSpace extends React.Component{
 		);
 		//
 		return (
-			<div className="canvasSpaceContainer"
-				ref="canvasWindow"
-				onMouseDown={this.onMouseDown}
-				onContextMenu={this.onContextMenu}
-				onMouseOver={this.onMouseOver}
-				onMouseOut={this.onMouseOut}
-			>
-				<div className="canvasSpace"
-					ref="canvasSpace"
-					style={{
-						transform: `translate(${pan[0]}px,${pan[1]}px)`,
-					}}
+			<div className="w-100 h-100 flex">
+				<Toolbox />
+				<div className="canvasSpaceContainer"
+					ref="canvasWindow"
+					onMouseDown={this.onMouseDown}
+					onContextMenu={this.onContextMenu}
+					onMouseOver={this.onMouseOver}
+					onMouseOut={this.onMouseOut}
 				>
-					{[
-						"mainCanvas",
-						"bufferCanvas",
-						"drawingCanvas",
-					].map(makeCanvas)}
+					<div className="canvasSpace"
+						ref="canvasSpace"
+						style={{
+							transform: `translate(${pan[0]}px,${pan[1]}px)`,
+						}}
+					>
+						{[
+							"mainCanvas",
+							"bufferCanvas",
+							"drawingCanvas",
+						].map(makeCanvas)}
+					</div>
+					{/* Invisible canvas for export data */}
+					<canvas className="dn" ref="exportCanvas"/>
 				</div>
-				{/* Invisible canvas for export data */}
-				<canvas className="dn" ref="exportCanvas"/>
 			</div>
 		);
 	}

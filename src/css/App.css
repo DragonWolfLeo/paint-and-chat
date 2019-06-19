@@ -5,3 +5,9 @@
 .overflowHidden {
 	overflow: hidden;
 }
+.appdarkbg {
+	background-color: #6c6c8b;
+}
+.applightbg {
+	background-color: #b3bbc7;
+}

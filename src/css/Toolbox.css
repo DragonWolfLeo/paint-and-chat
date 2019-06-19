@@ -1,0 +1,18 @@
+.toolbox {
+	width: 60px;
+	z-index: 1;
+	border: black solid;
+	border-width: 0 2px 0 0;
+}
+.brushIcon {
+	transition: all 0.3s ease-out;
+	/* background: #ffffff60; */
+	border: #ffffff00 1px solid;
+}
+.brushIcon:hover {
+	background: #ffffff80;
+}
+.selected {
+	background: #ffffffa0;
+	border-color: white;
+}

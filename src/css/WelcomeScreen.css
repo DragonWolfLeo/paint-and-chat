@@ -1,5 +1,6 @@
 .welcome {
 	height: 100%;
+	flex-basis: 100%;
 	padding: 40px 20px;
 	margin: 0;
 }

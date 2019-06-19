@@ -93,7 +93,7 @@ class Chat extends React.Component {
 		return (
 			<div className={`chatContainer chat_${hidden ? "hide" : "show"}`}>
 				<div 
-					className="chatCollapseBtn bg-navy"
+					className="chatCollapseBtn appdarkbg"
 					onClick={this.onChangeCollapse}
 				>
 					{hidden ? "◀" : "▶"}
@@ -102,12 +102,12 @@ class Chat extends React.Component {
 						title="New messages"
 					></div>)}
 				</div>
-				<div className={`chat bg-navy flex flex-column`}>
-					<div className="bg-white-40 dib tl pa2 flex">
+				<div className={`chat appdarkbg flex flex-column`}>
+					<div className="dib tl pa2 flex">
 						<h3 className="ma0" >{`Room: ${this.props.room}`}</h3>
 					</div>
 					<ChatList ref="chatList" chatArray={this.state.chatLog.toArray()} />
-					<form className="flex bg-white-40 pv2">
+					<form className="flex pv2">
 						<input ref="chatTextField" className="f4 w-100 mr1" type="text" placeholder="Chat..." autoComplete="off" defaultValue="" maxLength="1000"/> 
 						<button className="w4" onClick={this.onClickSendMessage}>Send</button>
 					</form>
