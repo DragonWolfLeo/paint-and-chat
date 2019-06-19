@@ -27,7 +27,6 @@ const MOUSE = Object.freeze({
 const ACTIONS = Object.freeze({
 	PAN: Symbol(),
 	DRAW: Symbol(),
-	DRAW_ALT: Symbol(),
 	ERASE: Symbol(),
 });
 
@@ -49,7 +48,7 @@ class CanvasSpace extends React.Component{
 		// Mouse bindings; 
 		this.addMouseBinding(ACTIONS.PAN, [MOUSE.LEFT, KEY.SPACE], MOUSE.MIDDLE);
 		this.addMouseBinding(ACTIONS.DRAW, MOUSE.LEFT);
-		this.addMouseBinding(ACTIONS.DRAW_ALT, MOUSE.RIGHT);
+		this.addMouseBinding(ACTIONS.ERASE, MOUSE.RIGHT);
 
 		// Lock binding sets as they should no longer be modified
 		Object.freeze(this.keyedMouseControls);
@@ -102,21 +101,32 @@ class CanvasSpace extends React.Component{
 			if(this.controlActive[ACTIONS.DRAW]){
 				return this.onDrawLine;
 			}
-			if(this.controlActive[ACTIONS.DRAW_ALT]){
+			if(this.controlActive[ACTIONS.ERASE]){
 				return event=>this.onDrawLine(event, true);
 			}
 			return ()=>null;
 		})()(event);
 	}
 	onControlActivate = (control, event) => {
+		const initDrawBoundary = () =>{
+			// Init boundary size
+			const c = this.canvasState;
+			const b = this.state.brushSize;
+			const pos = this.getMousePosition(event, this.refs.drawingCanvas);
+			c.minX = pos[0] - b;
+			c.minY = pos[1] - b;
+			c.maxX = pos[0] + b;
+			c.maxY = pos[1] + b;
+		}
 		switch(control){
 			case ACTIONS.DRAW:
-				// Init boundary size
-				const c = this.canvasState;
-				const pos = this.getMousePosition(event, this.refs.drawingCanvas);
-				[c.minX, c.minY] = pos;
-				[c.maxX, c.maxY] = pos;
-				return;
+				this.deactivateControl(ACTIONS.ERASE, control);
+				this.onDrawLine(event);
+				return initDrawBoundary();
+			case ACTIONS.ERASE:
+				this.deactivateControl(ACTIONS.DRAW, control);
+				this.onDrawLine(event, true);
+				return initDrawBoundary();
 			default: return;
 		}
 	}
@@ -130,10 +140,17 @@ class CanvasSpace extends React.Component{
 		switch(control){
 			case ACTIONS.DRAW:
 				return drawEnd();
-			case ACTIONS.DRAW_ALT:
+			case ACTIONS.ERASE:
 				return drawEnd();
 			default: return;
 		}
+	}
+	deactivateControl = (control, event) => {
+		// Function to manually deactivate a control
+		if(this.controlActive[control]){
+			this.controlActive[control] = false;
+			this.onControlDeactivate(control, event);
+		};
 	}
 	onMouseOver = event => this.mouseIsOverCanvasWindow = true;
 	onMouseOut = event => this.mouseIsOverCanvasWindow = false;
