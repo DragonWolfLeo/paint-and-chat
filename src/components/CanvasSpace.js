@@ -27,6 +27,7 @@ const MOUSE = Object.freeze({
 const ACTIONS = Object.freeze({
 	PAN: Symbol(),
 	DRAW: Symbol(),
+	DRAW_ALT: Symbol(),
 	ERASE: Symbol(),
 });
 
@@ -42,11 +43,13 @@ class CanvasSpace extends React.Component{
 			pan: this.getResetChatWidth(),
 			brushSize: 4,
 			brushColor: "#000000",
+			brushColorAlt: "#ffffff",
 		}
 		this.panPosition = [...this.state.pan];
 		// Mouse bindings; 
 		this.addMouseBinding(ACTIONS.PAN, [MOUSE.LEFT, KEY.SPACE], MOUSE.MIDDLE);
 		this.addMouseBinding(ACTIONS.DRAW, MOUSE.LEFT);
+		this.addMouseBinding(ACTIONS.DRAW_ALT, MOUSE.RIGHT);
 
 		// Lock binding sets as they should no longer be modified
 		Object.freeze(this.keyedMouseControls);
@@ -99,6 +102,9 @@ class CanvasSpace extends React.Component{
 			if(this.controlActive[ACTIONS.DRAW]){
 				return this.onDrawLine;
 			}
+			if(this.controlActive[ACTIONS.DRAW_ALT]){
+				return event=>this.onDrawLine(event, true);
+			}
 			return ()=>null;
 		})()(event);
 	}
@@ -115,19 +121,23 @@ class CanvasSpace extends React.Component{
 		}
 	}
 	onControlDeactivate = (control, event) => {
+		const drawEnd = () => {
+			if(this.canvasState.dirty){
+				this.canvasState.dirty = false;
+				this.sendCanvas();
+			}
+		}
 		switch(control){
 			case ACTIONS.DRAW:
-				if(this.canvasState.dirty){
-					this.canvasState.dirty = false;
-					this.sendCanvas();
-				}
-				return;
+				return drawEnd();
+			case ACTIONS.DRAW_ALT:
+				return drawEnd();
 			default: return;
 		}
 	}
 	onMouseOver = event => this.mouseIsOverCanvasWindow = true;
 	onMouseOut = event => this.mouseIsOverCanvasWindow = false;
-	onDrawLine = event => {
+	onDrawLine = (event, useAltColor) => {
 		this.canvasState.dirty = true;
 		const currentPosition = this.getMousePosition(event, this.refs.drawingCanvas)
 		if (!this.mousePosition) {
@@ -144,8 +154,8 @@ class CanvasSpace extends React.Component{
 		c.maxY = Math.max(c.maxY, currentPosition[1]);
 
 		// Draw a line
-		const {brushSize, brushColor} = this.state;
-		ctx.fillStyle = brushColor;
+		const {brushSize, brushColor, brushColorAlt} = this.state;
+		ctx.strokeStyle = useAltColor ? brushColorAlt : brushColor;
 		ctx.lineWidth = brushSize;
 		ctx.lineCap = "round";
 		ctx.beginPath();
