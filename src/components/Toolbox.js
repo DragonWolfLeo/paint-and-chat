@@ -1,22 +1,20 @@
 import React from "react";
 import '../css/Toolbox.css'
-
-const Toolbox = () => {
+const brushSizes = [24, 16, 12, 8, 4];
+const Toolbox = ({brushSize, brushColor, setBrushSize}) => {
 	return (
 		<div className="toolbox applightbg flex flex-column items-center">
-            <button className="mv3">Save</button>
-			<BrushIcon size="24" selected/>
-			<BrushIcon size="16" />
-			<BrushIcon size="12" />
-			<BrushIcon size="8" />
-			<BrushIcon size="4" />
+            <button className="mv3 black"><ion-icon name="ios-save" size="large"/></button>
+			{brushSizes.map(size=>{
+				return <BrushIcon key={size} size={size} selected={brushSize===size} setBrushSize={setBrushSize}/>
+			})}
         </div>
 	);
 }
-const BrushIcon = ({size, selected}) => {
+const BrushIcon = ({size, selected, setBrushSize}) => {
 	const width = `${size}px`, height = width;
 	return (
-		<div className="h2 w-100 mb1">
+		<div className="h2 w-100 mb1" onClick={()=>setBrushSize(size)}>
 			<div className={`brushIcon br2 h-100 flex justify-center items-center mh1 ${selected ? "selected" : ""}`}>
 				<div 
 					className="br-100 bg-black"

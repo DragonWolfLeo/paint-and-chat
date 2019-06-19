@@ -40,6 +40,8 @@ class CanvasSpace extends React.Component{
 			nativeHeight: 0,
 			zoom: 0,
 			pan: this.getResetChatWidth(),
+			brushSize: 4,
+			brushColor: "#000000",
 		}
 		this.panPosition = [...this.state.pan];
 		// Mouse bindings; 
@@ -142,7 +144,10 @@ class CanvasSpace extends React.Component{
 		c.maxY = Math.max(c.maxY, currentPosition[1]);
 
 		// Draw a line
-		ctx.fillStyle = "#000000";
+		const {brushSize, brushColor} = this.state;
+		ctx.fillStyle = brushColor;
+		ctx.lineWidth = brushSize;
+		ctx.lineCap = "round";
 		ctx.beginPath();
 		ctx.moveTo(...currentPosition);
 		ctx.lineTo(...this.mousePosition);
@@ -286,10 +291,10 @@ class CanvasSpace extends React.Component{
 	}
 	sendCanvas = () => {
 		const {drawingCanvas, bufferCanvas, exportCanvas} = this.refs;
-		const {nativeWidth, nativeHeight} = this.state;
+		const {nativeWidth, nativeHeight, brushSize} = this.state;
 		let {minX, maxX, minY, maxY} = this.canvasState;
 		// Clamp to canvas boundaries
-		const bleed = 3; // TODO: Make this adjust to brush size
+		const bleed = 3 + brushSize;
 		minX = Math.floor(Math.max(minX-bleed, 0));
 		maxX = Math.ceil(Math.min(maxX+bleed, nativeWidth));
 		minY = Math.floor(Math.max(minY-bleed, 0));
@@ -353,6 +358,10 @@ class CanvasSpace extends React.Component{
 	getResetChatWidth = () => {
 		return [-this.chatWidth/2, 0];
 	}
+	setBrushSize = size => {
+		if(size !== this.state.brushSize)
+			this.setState({brushSize: size});
+	}
 	initCanvas = (width, height) => {
 		// Initialize main canvas
 		const ctx = this.refs.mainCanvas.getContext("2d", {alpha: false});
@@ -389,7 +398,7 @@ class CanvasSpace extends React.Component{
 		}
 	}
 	render(){
-		const {nativeWidth, nativeHeight, pan} = this.state;
+		const {nativeWidth, nativeHeight, pan, brushSize, brushColor} = this.state;
 		const scale = this.getScale();
 		// Set up canvas style
 		const width = Math.round(nativeWidth * scale);
@@ -415,7 +424,7 @@ class CanvasSpace extends React.Component{
 		//
 		return (
 			<div className="w-100 h-100 flex">
-				<Toolbox />
+				<Toolbox brushSize={brushSize} brushColor={brushColor} setBrushSize={this.setBrushSize}/>
 				<div className="canvasSpaceContainer"
 					ref="canvasWindow"
 					onMouseDown={this.onMouseDown}

@@ -4,6 +4,10 @@
 	border: black solid;
 	border-width: 0 2px 0 0;
 }
+.toolbox button{
+	padding: 0;
+	line-height: 0;
+}
 .brushIcon {
 	transition: all 0.3s ease-out;
 	/* background: #ffffff60; */
