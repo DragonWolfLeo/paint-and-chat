@@ -1,6 +1,6 @@
 .toolbox {
-	width: 60px;
-	z-index: 1;
+	width: 64px;
+	z-index: 100;
 	border: black solid;
 	border-width: 0 2px 0 0;
 }

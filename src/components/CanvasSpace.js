@@ -1,6 +1,7 @@
 import React from "react";
 import '../css/CanvasSpace.css';
 import Toolbox from './Toolbox';
+import BrushCursor from './BrushCursor';
 import {eventListenerSetup} from '../util/util';
 
 // Utility functions
@@ -200,6 +201,7 @@ class CanvasSpace extends React.Component{
 	}
 	getMousePosition = (event, target) => {
 		// Get mouse location
+		if(!target) target = this.refs.canvasWindow;
 		const rect = target.getBoundingClientRect();
 		const scale = target === this.refs.drawingCanvas ? this.getScale() : 1;
 		const x = event.clientX - rect.x;
@@ -450,7 +452,8 @@ class CanvasSpace extends React.Component{
 		);
 		//
 		return (
-			<div className="w-100 h-100 flex">
+			<div className="canvasWorkArea w-100 h-100 flex">
+				<BrushCursor brushSize={brushSize} getMousePosition={this.getMousePosition} scale={scale}/>
 				<Toolbox brushSize={brushSize} brushColor={brushColor} setBrushSize={this.setBrushSize}/>
 				<div className="canvasSpaceContainer"
 					ref="canvasWindow"

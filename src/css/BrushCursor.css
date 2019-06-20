@@ -1,0 +1,8 @@
+.brushCursor{
+	position: absolute;
+	border-radius: 100%;
+	background: #e0e0e0;
+	mix-blend-mode: difference;
+	z-index: 1;
+	pointer-events: none
+}
