@@ -1,8 +1,17 @@
-.welcome {
+.welcomeContainer{
 	height: 100%;
+}
+.welcome {
 	flex-basis: 100%;
-	padding: 40px 20px;
+	flex-shrink: 1;
+	padding: 20px;
 	margin: 0;
+}
+.welcomeContainer footer {
+	font-family: 'Montserrat', sans-serif;
+	padding: 12px;
+	border-top: black 2px solid;
+	background: linear-gradient(#514d77,#2a2746);
 }
 .welcome .logo{
 	width: 100%;
@@ -52,11 +61,11 @@
 .welcome button:hover:after{
 	background: #ffffff32;
 }
-.textInput{
+.welcome .textInput{
 	width: 70%;
 	flex-shrink: 1;
 }
-.colorInput{
+.welcome .colorInput{
 	padding: 0;
 	width: 50px;
 	height: 32px;
