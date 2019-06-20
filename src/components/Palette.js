@@ -2,13 +2,13 @@ import React from 'react';
 import '../css/Palette.css';
 const colors = [
 	"#FFFFFF",
-	"#606060",
 	"#C0C0C0",
+	"#606060",
 	"#000000",
-	"#F8F8F8",
-	"#C0C0AC",
-	"#666650",
-	"#191919",
+	"#F8F8E8",
+	"#C0C09C",
+	"#666640",
+	"#191909",
 	"#EE4444",
 	"#880022",
 	"#EECC44",
