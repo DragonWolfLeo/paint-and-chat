@@ -1,5 +1,6 @@
 import React from "react";
 import '../css/Toolbox.css'
+import Palette from "./Palette";
 const brushSizes = [24, 16, 12, 8, 4];
 class Toolbox extends React.Component {
 	// Setting the brush size number input
@@ -17,13 +18,12 @@ class Toolbox extends React.Component {
 	updateInputBrushSize = size => this.refs.sizeInput.value = size || this.props.brushSize;
 	// Setting the brush color input
 	onSetBrushColor = isAlt => event => this.props.setBrushColor(event.target.value, isAlt);
-	// Set the value of the brush color input
-	updateInputBrushColor = (color, isAlt) => this.refs[`color${isAlt?2:1}Input`].value = color || this.props[isAlt ? "brushColor" : "brushColorAlt"];
+	// Selecting a brush color from the palette
+	choosePaletteColor = (color, isAlt) => this.props.setBrushColor(color, isAlt);
+	// Lifecycle hooks
 	componentDidMount(){
 		// Set initial values of input
 		this.updateInputBrushSize();
-		this.updateInputBrushColor(null, false);
-		this.updateInputBrushColor(null, true);
 	}
 	render(){
 		const {brushSize, brushColor, brushColorAlt, saveCanvas} = this.props;
@@ -51,6 +51,9 @@ class Toolbox extends React.Component {
 					}}>
 						<input ref="color2Input" className="colorInput dn w-100" type="color" onChange={this.onSetBrushColor(true)}/>
 					</label>
+				</Section>
+				<Section label="Palette" nomargin>
+					<Palette choosePaletteColor={this.choosePaletteColor}/>
 				</Section>
 			</div>
 		);
