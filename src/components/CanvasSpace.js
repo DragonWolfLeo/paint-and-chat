@@ -17,6 +17,7 @@ const KEY = Object.freeze({
 	SPACE: 32,
 	ESC: 27,
 	NUM_0: 48,
+	S: 83,
 });
 
 const MOUSE = Object.freeze({
@@ -309,6 +310,13 @@ class CanvasSpace extends React.Component{
 					preventDefault = false;
 				}
 				break;
+			case KEY.S:
+					if(event.ctrlKey){
+						this.saveCanvas();
+					} else {
+						preventDefault = false;
+					}
+					break;
 			default:
 				preventDefault = false;
 				break;
@@ -391,11 +399,39 @@ class CanvasSpace extends React.Component{
 		if(size !== this.state.brushSize)
 			this.setState({brushSize: size});
 	}
+	setBrushColor = (color, isAlt) => {
+		const target = isAlt ? "brushColorAlt" : "brushColor";
+		if(color !== this.state[target]){
+			this.setState({[target]: color});
+		}
+	}
 	initCanvas = (width, height) => {
 		// Initialize main canvas
 		const ctx = this.refs.mainCanvas.getContext("2d", {alpha: false});
 		ctx.fillStyle="#ffffff";
 		ctx.fillRect(0,0,width,height);
+	}
+	saveCanvas = () => {
+		const {mainCanvas, bufferCanvas, saveCanvas} = this.refs;
+		const {width, height} = mainCanvas;
+		saveCanvas.width = width;
+		saveCanvas.height = height;
+		// Draw main and buffer canvas onto save canvas
+		saveCanvas.getContext("2d", {alpha: false}).drawImage(mainCanvas,0,0);
+		saveCanvas.getContext("2d").drawImage(bufferCanvas,0,0);
+		// Create filename
+		const date = new Date();
+		const datestr = `${date.getFullYear()}-${date.getMonth().toString().padStart(2,"0")}-${date.getDate().toString().padStart(2,"0")}`;
+		const filename = `paint-${datestr}.png`;
+		// Create download
+		const url = saveCanvas.toDataURL("image/png");
+		const a = document.createElement("a")
+        a.href = url;
+		a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+		document.body.removeChild(a);
+		window.URL.revokeObjectURL(url);
 	}
 	// Lifecycle hooks
 	componentDidMount(){
@@ -427,7 +463,7 @@ class CanvasSpace extends React.Component{
 		}
 	}
 	render(){
-		const {nativeWidth, nativeHeight, pan, brushSize, brushColor} = this.state;
+		const {nativeWidth, nativeHeight, pan, brushSize, brushColor, brushColorAlt} = this.state;
 		const scale = this.getScale();
 		// Set up canvas style
 		const width = Math.round(nativeWidth * scale);
@@ -454,7 +490,14 @@ class CanvasSpace extends React.Component{
 		return (
 			<div className="canvasWorkArea w-100 h-100 flex">
 				<BrushCursor brushSize={brushSize} getMousePosition={this.getMousePosition} scale={scale}/>
-				<Toolbox brushSize={brushSize} brushColor={brushColor} setBrushSize={this.setBrushSize}/>
+				<Toolbox 
+					brushSize={brushSize} 
+					brushColor={brushColor} 
+					brushColorAlt={brushColorAlt} 
+					setBrushSize={this.setBrushSize} 
+					setBrushColor={this.setBrushColor}
+					saveCanvas={this.saveCanvas}
+				/>
 				<div className="canvasSpaceContainer"
 					ref="canvasWindow"
 					onMouseDown={this.onMouseDown}
@@ -474,8 +517,9 @@ class CanvasSpace extends React.Component{
 							"drawingCanvas",
 						].map(makeCanvas)}
 					</div>
-					{/* Invisible canvas for export data */}
+					{/* Invisible canvases for export data */}
 					<canvas className="dn" ref="exportCanvas"/>
+					<canvas className="dn" ref="saveCanvas"/>
 				</div>
 			</div>
 		);
