@@ -109,6 +109,8 @@ class CanvasSpace extends React.Component{
 			return ()=>null;
 		})()(event);
 	}
+	// Touch move
+	onTouchMove = event => this.onMouseMove(event);
 	onControlActivate = (control, event) => {
 		const initDrawBoundary = () =>{
 			// Init boundary size
@@ -209,13 +211,9 @@ class CanvasSpace extends React.Component{
 		const y = event.clientY - rect.y;
 		return [x/scale, y/scale];
 	}
-	onMouseDown = event => {
-		this.mousePosition = this.getMousePosition(event, this.refs.drawingCanvas);
-		this.windowPosition = this.getMousePosition(event, this.refs.canvasWindow);
-		this.mouseIsPressed[event.button] = true;
-
+	activateMouseBindings = (event, mouseButton) => {
 		// Enable keyed bindings
-		const mbind = this.keyedMouseControls[event.button];
+		const mbind = this.keyedMouseControls[mouseButton];
 		let keyActive = false;
 		mbind && mbind.forEach(({name, key})=>{
 			if(this.keyIsPressed[key]){
@@ -227,18 +225,16 @@ class CanvasSpace extends React.Component{
 
 		// If no keyed bindings were activated, enable unkeyed
 		if(!keyActive){
-			const mbind = this.unkeyedMouseControls[event.button];
+			const mbind = this.unkeyedMouseControls[mouseButton];
 			mbind && mbind.forEach(({name})=>{
 				this.controlActive[name] = true;
 				this.onControlActivate(name, event);
 			});
 		}
 	}
-	onMouseUp = event => {
-		this.mouseIsPressed[event.button] = false;
-
+	deactivateMouseBindings = (event, mouseButton) => {
 		// Disable ALL keyed bindings
-		const mbind = this.keyedMouseControls[event.button];
+		const mbind = this.keyedMouseControls[mouseButton];
 		let keyWasActive = false;
 		mbind && mbind.forEach(({name, key})=>{
 			this.controlActive[name] = false;
@@ -248,13 +244,63 @@ class CanvasSpace extends React.Component{
 
 		// If no keyed bindings were deactivated, disable unkeyed
 		if(!keyWasActive){
-			const mbind = this.unkeyedMouseControls[event.button];
+			const mbind = this.unkeyedMouseControls[mouseButton];
 			mbind && mbind.forEach(({name})=>{
 				this.controlActive[name] = false;
 				this.onControlDeactivate(name, event);
 			});
 		}
 
+	}
+	onMouseDown = event => {
+		this.mousePosition = this.getMousePosition(event, this.refs.drawingCanvas);
+		this.windowPosition = this.getMousePosition(event, this.refs.canvasWindow);
+		this.mouseIsPressed[event.button] = true;
+		this.activateMouseBindings(event, event.button);
+	}
+	onMouseUp = event => {
+		this.mouseIsPressed[event.button] = false;
+		this.deactivateMouseBindings(event, event.button);
+	}
+	onTouchStart = event => {
+		event.preventDefault(); // Prevent mouse events
+		const touchEvent = event.touches[event.which];
+		// Set up listeners
+		const eventListenerSetups = [];
+		// Function to remove listeners
+		const uninstallSetups = () => {
+			eventListenerSetups.forEach(setup=>{
+				setup.remove();
+			})
+		}
+		// Touch events
+		const onTouchMove = event => {
+			const touch = event.touches[event.which];
+			this.onTouchMove(touch);
+		}
+		const onTouchEnd = event => {
+			uninstallSetups();
+			this.onTouchEnd(event);
+		}
+		eventListenerSetups.push(eventListenerSetup(document.body,
+			["touchmove", onTouchMove],
+			["touchend", onTouchEnd],
+		));
+		// Add event listeners
+		eventListenerSetups.forEach(setup=>{
+			setup.add();
+		})
+
+		this.mousePosition = this.getMousePosition(touchEvent, this.refs.drawingCanvas);
+		this.windowPosition = this.getMousePosition(touchEvent, this.refs.canvasWindow);
+		this.mouseIsPressed[MOUSE.LEFT] = true;
+		
+		this.activateMouseBindings(touchEvent, MOUSE.LEFT);
+	}
+	onTouchEnd = event => {
+		event.preventDefault(); // Prevent mouse events
+		this.mouseIsPressed[MOUSE.LEFT] = false;
+		this.deactivateMouseBindings(event, MOUSE.LEFT);
 	}
 	onContextMenu = event => event.preventDefault(); // Disable context menu
 	onWheel = event => {
@@ -444,7 +490,8 @@ class CanvasSpace extends React.Component{
 			["keyup", this.onKeyUp],
 		));
 		eventListenerSetups.push(eventListenerSetup(this.refs.canvasWindow, 
-			["wheel", this.onWheel, {passive: false}]
+			["wheel", this.onWheel, {passive: false}],
+			["touchstart", this.onTouchStart, {passive: false}],
 		));
 		eventListenerSetups.push(this.props.connection.onCanvasSetup(this.onReceiveCanvas));
 		// Add event listeners
