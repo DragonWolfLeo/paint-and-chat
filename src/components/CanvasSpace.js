@@ -541,11 +541,12 @@ class CanvasSpace extends React.Component{
 			left: -width/2,
 			top: -height/2,
 			position: "absolute",
-			imageRendering: scale < 2 ? "auto" : "crisp-edges",
 		};
+		const canvasClass = scale < 2 ? "" : "pixelated";
 		// Make canvas function
 		const makeCanvas = ref => (
-			<canvas 
+			<canvas
+				className={canvasClass}
 				key={ref}
 				style={style}
 				ref={ref} 

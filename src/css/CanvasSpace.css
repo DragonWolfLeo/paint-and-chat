@@ -22,3 +22,7 @@
 	line-height: 0;
 	background-color: white;
 }
+.canvasSpace .pixelated {
+	image-rendering: crisp-edges;
+	image-rendering: pixelated;
+}
