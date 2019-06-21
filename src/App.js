@@ -6,20 +6,19 @@ import CanvasSpace from './components/CanvasSpace';
 import Chat from './components/Chat';
 import WelcomeScreen from './components/WelcomeScreen';
 
-const BASE_PATH = process.env.REACT_APP_BASE_PATH || "";
-
 // Utility functions
-const setPath = (room = "", replace = false) => {
-	if(window.location.pathname !== `${BASE_PATH}/${room}`){
-		window.history[replace ? "replaceState" : "pushState"](null, "", `${BASE_PATH}/${room}`);
+const setHash = (room = "", replace = false) => {
+	const current = getRoomFromHash();
+	if(current !== room){
+		window.history[replace ? "replaceState" : "pushState"](null, "", `#${room}`);
 	}
 }
-const getRoomFromPathname = () => window.location.pathname.substring(BASE_PATH.length || 1) || "";
+const getRoomFromHash = () => window.location.hash ? window.location.hash.substring(1) : "";
 
 class App extends Component {
 	constructor(props){
 		super(props);
-		const room = getRoomFromPathname();
+		const room = getRoomFromHash();
 		this.state = {
 			user: null,		
 			connection: null,
@@ -27,7 +26,7 @@ class App extends Component {
 			room,
 			awaiting: room ? true : false,
 		}
-		setPath(room, true); // Set current history state
+		setHash(room, true); // Set current history state
 		if(room) this.attemptRejoinSession(room);
 	}
 	attemptRejoinSession = room => {
@@ -42,7 +41,7 @@ class App extends Component {
 				}
 			}else{
 				newState.room = null;
-				setPath("", true);
+				setHash("", true);
 			}
 			this.setState(newState);
 		});
@@ -51,7 +50,7 @@ class App extends Component {
 		window.addEventListener("popstate", this.onPopState);
 	}
 	onPopState = event =>{
-		const room = getRoomFromPathname();
+		const room = getRoomFromHash();
 		const {connection} = this.state;
 		if(room){
 			if(connection) connection.disconnect(); // Close current connection if any
@@ -92,10 +91,10 @@ class App extends Component {
 		connection.onDisconnect(()=>{
 			this.setState({connectionActive: false, connection: null});
 		});
-		this.setState({connection},()=>setPath(room));
+		this.setState({connection},()=>setHash(room));
 	}
 	declineRoom = () => {
-		this.setState({room: null},()=>setPath());
+		this.setState({room: null},()=>setHash());
 	}
 	render() {
 		const {connection, connectionActive, user, room, awaiting} = this.state;
