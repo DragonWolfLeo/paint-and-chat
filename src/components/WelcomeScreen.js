@@ -13,7 +13,7 @@ const WelcomeScreen = props => {
 					{!awaiting && <Signin room={room} joinRoom={joinRoom} declineRoom={declineRoom}/>}
 				</header>
 				<footer>
-					<a className="white link" href="https://github.com/DragonWolfLeo/paint-and-chat-client">
+					<a className="white link" href="https://github.com/DragonWolfLeo/paint-and-chat">
 						<ion-icon name="logo-github" />
 						<span className="pl2">View on GitHub</span>
 					</a>
