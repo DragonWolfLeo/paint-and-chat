@@ -6,13 +6,15 @@ import CanvasSpace from './components/CanvasSpace';
 import Chat from './components/Chat';
 import WelcomeScreen from './components/WelcomeScreen';
 
+const BASE_PATH = process.env.REACT_APP_BASE_PATH || "";
+
 // Utility functions
 const setPath = (room = "", replace = false) => {
-	if(window.location.pathname !== `/${room}`){
-		window.history[replace ? "replaceState" : "pushState"](null, "", `/${room}`);
+	if(window.location.pathname !== `${BASE_PATH}/${room}`){
+		window.history[replace ? "replaceState" : "pushState"](null, "", `${BASE_PATH}/${room}`);
 	}
 }
-const getRoomFromPathname = () => window.location.pathname.substring(1) || "";
+const getRoomFromPathname = () => window.location.pathname.substring(BASE_PATH.length || 1) || "";
 
 class App extends Component {
 	constructor(props){
