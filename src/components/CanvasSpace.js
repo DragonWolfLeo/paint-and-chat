@@ -7,6 +7,9 @@ import {eventListenerSetup} from '../util/util';
 // Utility functions
 // const addPositions = (arr1, arr2) => arr1.map((first, i) => first + arr2[i]);
 const subPositions = (arr1, arr2) => arr1.map((first, i) => first - arr2[i]);
+const colorStr = (...rgb) => { // Turns rgb array into color string
+	return rgb.reduce((acc,num) => acc + num.toString(16).padStart(2,"0") , "#");
+}
 const absValueMax = (num, max) =>
 	num > max ? max :
 	num < -max ? -max :
@@ -14,6 +17,7 @@ const absValueMax = (num, max) =>
 
 // Constants
 const KEY = Object.freeze({
+	ALT: 18,
 	SPACE: 32,
 	ESC: 27,
 	NUM_0: 48,
@@ -30,6 +34,8 @@ const ACTIONS = Object.freeze({
 	PAN: Symbol(),
 	DRAW: Symbol(),
 	ERASE: Symbol(),
+	DRAW_COLOR_PICK: Symbol(),
+	ERASE_COLOR_PICK: Symbol(),
 });
 
 const STARTING_CHAT_WIDTH = 350;
@@ -51,6 +57,8 @@ class CanvasSpace extends React.Component{
 		this.addMouseBinding(ACTIONS.PAN, [MOUSE.LEFT, KEY.SPACE], MOUSE.MIDDLE);
 		this.addMouseBinding(ACTIONS.DRAW, MOUSE.LEFT);
 		this.addMouseBinding(ACTIONS.ERASE, MOUSE.RIGHT);
+		this.addMouseBinding(ACTIONS.DRAW_COLOR_PICK, [MOUSE.LEFT, KEY.ALT]);
+		this.addMouseBinding(ACTIONS.ERASE_COLOR_PICK, [MOUSE.RIGHT, KEY.ALT]);
 
 		// Lock binding sets as they should no longer be modified
 		Object.freeze(this.keyedMouseControls);
@@ -112,25 +120,18 @@ class CanvasSpace extends React.Component{
 	// Touch move
 	onTouchMove = event => this.onMouseMove(event);
 	onControlActivate = (control, event) => {
-		const initDrawBoundary = () =>{
-			// Init boundary size
-			const c = this.canvasState;
-			const b = this.state.brushSize;
-			const pos = this.getMousePosition(event, this.refs.drawingCanvas);
-			c.minX = pos[0] - b;
-			c.minY = pos[1] - b;
-			c.maxX = pos[0] + b;
-			c.maxY = pos[1] + b;
-		}
 		switch(control){
 			case ACTIONS.DRAW:
 				this.deactivateControl(ACTIONS.ERASE, control);
-				this.onDrawLine(event);
-				return initDrawBoundary();
+				return this.initDrawBoundary(event);
 			case ACTIONS.ERASE:
 				this.deactivateControl(ACTIONS.DRAW, control);
 				this.onDrawLine(event, true);
-				return initDrawBoundary();
+				return this.initDrawBoundary(event);
+			case ACTIONS.DRAW_COLOR_PICK:
+				return this.setBrushColorAtMouse(event);
+			case ACTIONS.ERASE_COLOR_PICK:
+				return this.setBrushColorAtMouse(event, true);
 			default: return;
 		}
 	}
@@ -160,7 +161,7 @@ class CanvasSpace extends React.Component{
 	onMouseOut = event => this.mouseIsOverCanvasWindow = false;
 	onDrawLine = (event, useAltColor) => {
 		this.canvasState.dirty = true;
-		const currentPosition = this.getMousePosition(event, this.refs.drawingCanvas)
+		const currentPosition = this.getMousePosition(event, this.refs.drawingCanvas);
 		if (!this.mousePosition) {
 			// Save previous position
 			this.mousePosition = currentPosition;
@@ -451,11 +452,30 @@ class CanvasSpace extends React.Component{
 			this.setState({[target]: color});
 		}
 	}
+	setBrushColorAtMouse = (event, isAlt) => {
+		const currentPosition = this.getMousePosition(event, this.refs.drawingCanvas);
+        // Pick color from canvas
+        const ctx = this.refs.mainCanvas.getContext("2d");
+        const [r,g,b] = ctx.getImageData(...currentPosition,1,1).data;
+		const color = colorStr(r,g,b);
+		// Set color
+		this.setBrushColor(color, isAlt);
+	}
 	initCanvas = (width, height) => {
 		// Initialize main canvas
 		const ctx = this.refs.mainCanvas.getContext("2d", {alpha: false});
 		ctx.fillStyle="#ffffff";
 		ctx.fillRect(0,0,width,height);
+	}
+	initDrawBoundary = event => {
+		// Init boundary size
+		const c = this.canvasState;
+		const b = this.state.brushSize;
+		const pos = this.getMousePosition(event, this.refs.drawingCanvas);
+		c.minX = pos[0] - b;
+		c.minY = pos[1] - b;
+		c.maxX = pos[0] + b;
+		c.maxY = pos[1] + b;
 	}
 	saveCanvas = () => {
 		const {mainCanvas, bufferCanvas, saveCanvas} = this.refs;
