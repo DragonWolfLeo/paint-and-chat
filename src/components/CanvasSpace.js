@@ -487,7 +487,7 @@ class CanvasSpace extends React.Component{
 		saveCanvas.getContext("2d").drawImage(bufferCanvas,0,0);
 		// Create filename
 		const date = new Date();
-		const datestr = `${date.getFullYear()}-${date.getMonth().toString().padStart(2,"0")}-${date.getDate().toString().padStart(2,"0")}`;
+		const datestr = `${date.getFullYear()}-${(date.getMonth()+1).toString().padStart(2,"0")}-${date.getDate().toString().padStart(2,"0")}`;
 		const filename = `paint-${datestr}.png`;
 		// Create download
 		const url = saveCanvas.toDataURL("image/png");
