@@ -252,15 +252,13 @@ class CanvasSpace extends React.Component{
 	deactivateMouseBindings = (event, mouseButton) => {
 		// Disable ALL keyed bindings
 		const mbind = this.keyedMouseControls[mouseButton];
-		let keyWasActive = false;
-		mbind && mbind.forEach(({name, key})=>{
+		mbind && mbind.forEach(({name})=>{
 			this.controlActive[name] = false;
-			this.keyIsPressed[key] && (keyWasActive = true);
 			this.onControlDeactivate(name, event);
 		});
 
-		// If no keyed bindings were deactivated, disable unkeyed
-		if(!keyWasActive){
+		{
+			// Disable keyed bindings
 			const mbind = this.unkeyedMouseControls[mouseButton];
 			mbind && mbind.forEach(({name})=>{
 				this.controlActive[name] = false;
