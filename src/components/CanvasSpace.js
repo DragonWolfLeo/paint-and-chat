@@ -120,14 +120,30 @@ class CanvasSpace extends React.Component{
 	// Touch move
 	onTouchMove = event => this.onMouseMove(event);
 	onControlActivate = (control, event) => {
+		const cancelDraw = action => {
+			// Function to cancel drawing when both draw and erase are pressed
+			const {nativeWidth, nativeHeight} = this.state
+			this.canvasState.dirty = false;
+			this.refs.drawingCanvas.getContext("2d").clearRect(0,0,nativeWidth, nativeHeight);
+			// Deactivate both controls
+			this.deactivateControl(action, event);
+			this.deactivateControl(control, event);
+		}
 		switch(control){
 			case ACTIONS.DRAW:
-				this.deactivateControl(ACTIONS.ERASE, control);
-				return this.initDrawBoundary(event);
+				if(this.controlActive[ACTIONS.ERASE]){
+					return cancelDraw(ACTIONS.ERASE);
+				} else {
+					this.onDrawLine(event);
+					return this.initDrawBoundary(event);
+				}
 			case ACTIONS.ERASE:
-				this.deactivateControl(ACTIONS.DRAW, control);
-				this.onDrawLine(event, true);
-				return this.initDrawBoundary(event);
+				if(this.controlActive[ACTIONS.DRAW]){
+					return cancelDraw(ACTIONS.DRAW);
+				} else {
+					this.onDrawLine(event, true);
+					return this.initDrawBoundary(event);
+				}
 			case ACTIONS.DRAW_COLOR_PICK:
 				return this.setBrushColorAtMouse(event);
 			case ACTIONS.ERASE_COLOR_PICK:
