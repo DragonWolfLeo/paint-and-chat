@@ -3,6 +3,7 @@ import '../css/CanvasSpace.css';
 import Toolbox from './Toolbox';
 import BrushCursor from './BrushCursor';
 import {eventListenerSetup} from '../util/util';
+import {MIN_BRUSH_SIZE, MAX_BRUSH_SIZE} from '../constants';
 
 // Utility functions
 // const addPositions = (arr1, arr2) => arr1.map((first, i) => first + arr2[i]);
@@ -22,6 +23,8 @@ const KEY = Object.freeze({
 	ESC: 27,
 	NUM_0: 48,
 	S: 83,
+	LEFT_BRACKET: 219,
+	RIGHT_BRACKET: 221,
 });
 
 const MOUSE = Object.freeze({
@@ -378,6 +381,12 @@ class CanvasSpace extends React.Component{
 						preventDefault = false;
 					}
 					break;
+			case KEY.LEFT_BRACKET:
+				this.setBrushSize(this.state.brushSize-1, this.refs.toolbox.updateInputBrushSize);
+				break;
+			case KEY.RIGHT_BRACKET:
+				this.setBrushSize(this.state.brushSize+1, this.refs.toolbox.updateInputBrushSize);
+				break;
 			default:
 				preventDefault = false;
 				break;
@@ -456,9 +465,13 @@ class CanvasSpace extends React.Component{
 	getResetChatWidth = () => {
 		return [-this.chatWidth/2, 0];
 	}
-	setBrushSize = size => {
+	setBrushSize = (size, onSetBrushSizeFn) => {
+		// Clamp within range
+		if(size < MIN_BRUSH_SIZE) size = MIN_BRUSH_SIZE;
+		if(size > MAX_BRUSH_SIZE) size = MAX_BRUSH_SIZE;
+		// Change brush size if different
 		if(size !== this.state.brushSize)
-			this.setState({brushSize: size});
+			this.setState({brushSize: size}, onSetBrushSizeFn);
 	}
 	setBrushColor = (color, isAlt) => {
 		const target = isAlt ? "brushColorAlt" : "brushColor";
@@ -573,6 +586,7 @@ class CanvasSpace extends React.Component{
 			<div className="canvasWorkArea w-100 h-100 flex">
 				<BrushCursor brushSize={brushSize} getMousePosition={this.getMousePosition} scale={scale}/>
 				<Toolbox 
+					ref="toolbox"
 					brushSize={brushSize} 
 					brushColor={brushColor} 
 					brushColorAlt={brushColorAlt} 

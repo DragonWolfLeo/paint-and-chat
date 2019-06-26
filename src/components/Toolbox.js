@@ -1,7 +1,10 @@
 import React from "react";
 import '../css/Toolbox.css'
 import Palette from "./Palette";
-const brushSizes = [24, 16, 12, 8, 4];
+import {MIN_BRUSH_SIZE, MAX_BRUSH_SIZE} from '../constants';
+
+const BRUSH_SIZES = Object.freeze([24, 16, 12, 8, 4]);
+
 class Toolbox extends React.Component {
 	// Setting the brush size number input
 	onSizeInputChange = event => {
@@ -47,15 +50,15 @@ class Toolbox extends React.Component {
 					<ion-icon name="ios-save" size="large"/>
 				</button>
 				<Section label="Size">
-					{brushSizes.map(size=>{
+					{BRUSH_SIZES.map(size=>{
 						return <BrushIcon key={size} size={size} selected={brushSize===size} setBrushSize={this.onBrushSizeButton}/>
 					})}
 					<input 
 						ref="sizeInput" 
 						className="w-100 tc" 
 						type="number"
-						min="1" 
-						max="100" 
+						min={MIN_BRUSH_SIZE} 
+						max={MAX_BRUSH_SIZE}
 						onChange={this.onSizeInputChange}
 						onBlur={this.onSizeInputBlur}
 					/>

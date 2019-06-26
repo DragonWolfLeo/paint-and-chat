@@ -1,3 +1,4 @@
+// Chat
 const MESSAGE_TYPES = Object.freeze({
 	// Global
 	USER_MESSAGE: "user_message",
@@ -7,6 +8,12 @@ const MESSAGE_TYPES = Object.freeze({
 	NEW_MESSAGE: "new_message",
 });
 
+// Tools
+const MIN_BRUSH_SIZE = 1;
+const MAX_BRUSH_SIZE = 100;
+
 export {
 	MESSAGE_TYPES,
+	MIN_BRUSH_SIZE,
+	MAX_BRUSH_SIZE,
 };
