@@ -473,10 +473,10 @@ class CanvasSpace extends React.Component{
 		if(size !== this.state.brushSize)
 			this.setState({brushSize: size}, onSetBrushSizeFn);
 	}
-	setBrushColor = (color, isAlt) => {
+	setBrushColor = (color, isAlt, onSetBrushColorFn) => {
 		const target = isAlt ? "brushColorAlt" : "brushColor";
 		if(color !== this.state[target]){
-			this.setState({[target]: color});
+			this.setState({[target]: color}, onSetBrushColorFn);
 		}
 	}
 	setBrushColorAtMouse = (event, isAlt) => {
@@ -486,7 +486,7 @@ class CanvasSpace extends React.Component{
         const [r,g,b] = ctx.getImageData(...currentPosition,1,1).data;
 		const color = colorStr(r,g,b);
 		// Set color
-		this.setBrushColor(color, isAlt);
+		this.setBrushColor(color, isAlt, ()=>this.refs.toolbox.updateInputBrushColor(color, isAlt));
 	}
 	initCanvas = (width, height) => {
 		// Initialize main canvas

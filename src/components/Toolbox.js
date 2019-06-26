@@ -33,10 +33,15 @@ class Toolbox extends React.Component {
 	}
 	// Set the value of the brush size number input
 	updateInputBrushSize = size => this.refs.sizeInput.value = size || this.props.brushSize;
+	// Set the value of the brush color input
+	updateInputBrushColor = (color, isAlt) => this.refs[`color${isAlt?2:1}Input`].value = color || this.props[`brushColor${isAlt?"Alt":""}`];
 	// Setting the brush color input
 	onSetBrushColor = isAlt => event => this.props.setBrushColor(event.target.value, isAlt);
 	// Selecting a brush color from the palette
-	choosePaletteColor = (color, isAlt) => this.props.setBrushColor(color, isAlt);
+	choosePaletteColor = (color, isAlt) => {
+		this.props.setBrushColor(color, isAlt);
+		this.updateInputBrushColor(color, isAlt);
+	};
 	// Lifecycle hooks
 	componentDidMount(){
 		// Set initial values of input
