@@ -6,8 +6,22 @@ class Toolbox extends React.Component {
 	// Setting the brush size number input
 	onSizeInputChange = event => {
 		const {target} = event;
-		if(target.checkValidity())
-			this.props.setBrushSize(Number(target.value));
+		let value = Number(target.value);
+		if(!target.checkValidity()) {
+			 // Check if this is a number; return if not
+			if(!value) return;
+			// Clamp within range if invalid
+			const min = Number(target.min);
+			const max = Number(target.max);
+			value = value > max ? max : min;
+		}
+		this.props.setBrushSize(value);
+	}
+	// Losing focus on brush input
+	onSizeInputBlur = event => {
+		// Revert to current brush size
+		if(!event.target.checkValidity())
+			return this.updateInputBrushSize();
 	}
 	// Selecting a brush size button
 	onBrushSizeButton = size => {
@@ -36,20 +50,38 @@ class Toolbox extends React.Component {
 					{brushSizes.map(size=>{
 						return <BrushIcon key={size} size={size} selected={brushSize===size} setBrushSize={this.onBrushSizeButton}/>
 					})}
-					<input ref="sizeInput" className="w-100 tc" type="number" max="100" min="1" onChange={this.onSizeInputChange}/>
+					<input 
+						ref="sizeInput" 
+						className="w-100 tc" 
+						type="number"
+						min="1" 
+						max="100" 
+						onChange={this.onSizeInputChange}
+						onBlur={this.onSizeInputBlur}
+					/>
 				</Section>
 				<Section label="Color 1" nomargin>
 					<label className="db w-100 h2" style={{
 						backgroundColor: brushColor,
 					}}>
-						<input ref="color1Input" className="dn colorInput w-100" type="color" onChange={this.onSetBrushColor(false)}/>
+						<input 
+							ref="color1Input"
+							className="dn colorInput w-100"
+							type="color" 
+							onChange={this.onSetBrushColor(false)}
+						/>
 					</label>
 				</Section>
 				<Section label="Color 2" nomargin>
 					<label className="db w-100 h2" style={{
 						backgroundColor: brushColorAlt,
 					}}>
-						<input ref="color2Input" className="colorInput dn w-100" type="color" onChange={this.onSetBrushColor(true)}/>
+						<input 
+							ref="color2Input" 
+							className="colorInput dn w-100" 
+							type="color" 
+							onChange={this.onSetBrushColor(true)}
+						/>
 					</label>
 				</Section>
 				<Section label="Palette" nomargin>
