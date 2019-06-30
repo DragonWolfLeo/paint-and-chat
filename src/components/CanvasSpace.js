@@ -39,6 +39,7 @@ const ACTIONS = Object.freeze({
 	ERASE: Symbol(),
 	DRAW_COLOR_PICK: Symbol(),
 	ERASE_COLOR_PICK: Symbol(),
+	DRAW_CANCEL: Symbol(),
 });
 
 const STARTING_CHAT_WIDTH = 350;
@@ -54,6 +55,7 @@ class CanvasSpace extends React.Component{
 			brushSize: 4,
 			brushColor: "#000000",
 			brushColorAlt: "#ffffff",
+			brushVisible: false,
 		}
 		this.panPosition = [...this.state.pan];
 		// Mouse bindings; 
@@ -77,6 +79,10 @@ class CanvasSpace extends React.Component{
 		maxX: 0,
 		minY: 0,
 		maxY: 0,
+	}
+	touchState = {
+		active: false,
+		multitouch: false,
 	}
 	chatWidth = STARTING_CHAT_WIDTH;
 
@@ -106,6 +112,8 @@ class CanvasSpace extends React.Component{
 
 	// Events
 	onMouseMove = event => {
+		// Make brush visible
+		this.setBrushVisibility(true);
 		// Return function based on inputs
 		(()=>{
 			if(this.controlActive[ACTIONS.PAN]){
@@ -120,29 +128,18 @@ class CanvasSpace extends React.Component{
 			return ()=>null;
 		})()(event);
 	}
-	// Touch move
-	onTouchMove = event => this.onMouseMove(event);
 	onControlActivate = (control, event) => {
-		const cancelDraw = action => {
-			// Function to cancel drawing when both draw and erase are pressed
-			const {nativeWidth, nativeHeight} = this.state
-			this.canvasState.dirty = false;
-			this.refs.drawingCanvas.getContext("2d").clearRect(0,0,nativeWidth, nativeHeight);
-			// Deactivate both controls
-			this.deactivateControl(action, event);
-			this.deactivateControl(control, event);
-		}
 		switch(control){
 			case ACTIONS.DRAW:
 				if(this.controlActive[ACTIONS.ERASE]){
-					return cancelDraw(ACTIONS.ERASE);
+					return this.cancelDraw(event);
 				} else {
 					this.onDrawLine(event);
 					return this.initDrawBoundary(event);
 				}
 			case ACTIONS.ERASE:
 				if(this.controlActive[ACTIONS.DRAW]){
-					return cancelDraw(ACTIONS.DRAW);
+					return this.cancelDraw(event);
 				} else {
 					this.onDrawLine(event, true);
 					return this.initDrawBoundary(event);
@@ -151,6 +148,8 @@ class CanvasSpace extends React.Component{
 				return this.setBrushColorAtMouse(event);
 			case ACTIONS.ERASE_COLOR_PICK:
 				return this.setBrushColorAtMouse(event, true);
+			case ACTIONS.DRAW_CANCEL:
+					return this.cancelDraw(event);
 			default: return;
 		}
 	}
@@ -279,46 +278,6 @@ class CanvasSpace extends React.Component{
 	onMouseUp = event => {
 		this.mouseIsPressed[event.button] = false;
 		this.deactivateMouseBindings(event, event.button);
-	}
-	onTouchStart = event => {
-		event.preventDefault(); // Prevent mouse events
-		const touchEvent = event.touches[event.which];
-		// Set up listeners
-		const eventListenerSetups = [];
-		// Function to remove listeners
-		const uninstallSetups = () => {
-			eventListenerSetups.forEach(setup=>{
-				setup.remove();
-			})
-		}
-		// Touch events
-		const onTouchMove = event => {
-			const touch = event.touches[event.which];
-			this.onTouchMove(touch);
-		}
-		const onTouchEnd = event => {
-			uninstallSetups();
-			this.onTouchEnd(event);
-		}
-		eventListenerSetups.push(eventListenerSetup(document.body,
-			["touchmove", onTouchMove],
-			["touchend", onTouchEnd],
-		));
-		// Add event listeners
-		eventListenerSetups.forEach(setup=>{
-			setup.add();
-		})
-
-		this.mousePosition = this.getMousePosition(touchEvent, this.refs.drawingCanvas);
-		this.windowPosition = this.getMousePosition(touchEvent, this.refs.canvasWindow);
-		this.mouseIsPressed[MOUSE.LEFT] = true;
-		
-		this.activateMouseBindings(touchEvent, MOUSE.LEFT);
-	}
-	onTouchEnd = event => {
-		event.preventDefault(); // Prevent mouse events
-		this.mouseIsPressed[MOUSE.LEFT] = false;
-		this.deactivateMouseBindings(event, MOUSE.LEFT);
 	}
 	onContextMenu = event => event.preventDefault(); // Disable context menu
 	onWheel = event => {
@@ -458,6 +417,52 @@ class CanvasSpace extends React.Component{
 		}
 		img.src = url;
 	}
+	setBrushVisibility = visible =>{
+		// Set brush visibility
+		if(this.state.brushVisible !== visible){
+			this.setState({brushVisible: visible});
+		}
+	}
+	// Touch events
+	onTouchStart = event => {
+		event.preventDefault(); // Prevent mouse events
+		this.touchState.active = true;
+		// Check number of touches
+		const {touches} = event;
+		const touchEvent = touches[0];
+		if(touches.length > 1) {
+			// Multitouching
+			if(!this.touchState.multitouch){
+				this.cancelDraw();
+			}
+			this.setBrushVisibility(false);
+			this.touchState.multitouch = true;
+			this.windowPosition = this.getMousePosition(touchEvent, this.refs.canvasWindow);
+		} else {
+			// Single touch
+			this.setBrushVisibility(true);
+			this.touchState.multitouch = false;
+			this.mousePosition = this.getMousePosition(touchEvent, this.refs.drawingCanvas);
+			this.mouseIsPressed[MOUSE.LEFT] = true;
+			this.activateMouseBindings(touchEvent, MOUSE.LEFT);
+		}
+	}
+	onTouchEnd = event => {
+		this.windowPosition = null; // Reset windowPosition so it's reset by onPan
+		if(event.touches.length > 0) return;
+		// Deactivate if no touches are active
+		this.setBrushVisibility(false);
+		this.touchState.active = false;
+		this.mouseIsPressed[MOUSE.LEFT] = false;
+		this.deactivateMouseBindings(event, MOUSE.LEFT);
+	}
+	onTouchMove = event => {
+		event.preventDefault(); // Prevent mouse events
+		const {touches} = event;
+		const touchEvent = touches[0];
+		// Pan or draw depending on the number of touches
+		(this.touchState.multitouch ? this.onPan : this.onDrawLine)(touchEvent);
+	}
 	// Other functions
 	getScale = zoom => {
 		return 2**(zoom || this.state.zoom);
@@ -526,19 +531,30 @@ class CanvasSpace extends React.Component{
 		document.body.removeChild(a);
 		window.URL.revokeObjectURL(url);
 	}
+	cancelDraw = event => {
+		// Function to cancel drawing stroke
+		const {nativeWidth, nativeHeight} = this.state;
+		this.canvasState.dirty = false;
+		this.refs.drawingCanvas.getContext("2d").clearRect(0,0,nativeWidth, nativeHeight);
+		// Deactivate draw and erase
+		this.deactivateControl(ACTIONS.DRAW, event);
+		this.deactivateControl(ACTIONS.ERASE, event);
+	}
 	// Lifecycle hooks
 	componentDidMount(){
 		// Get event listener setup functions
 		const eventListenerSetups = [];
 		eventListenerSetups.push(eventListenerSetup(document.body,
+			["touchend", this.onTouchEnd],
 			["mousemove", this.onMouseMove],
 			["mouseup", this.onMouseUp],
 			["keydown", this.onKeyDown],
 			["keyup", this.onKeyUp],
 		));
 		eventListenerSetups.push(eventListenerSetup(this.refs.canvasWindow, 
-			["wheel", this.onWheel, {passive: false}],
+			["touchmove", this.onTouchMove, {passive: false}],
 			["touchstart", this.onTouchStart, {passive: false}],
+			["wheel", this.onWheel, {passive: false}],
 		));
 		eventListenerSetups.push(this.props.connection.onCanvasSetup(this.onReceiveCanvas));
 		// Add event listeners
@@ -557,7 +573,7 @@ class CanvasSpace extends React.Component{
 		}
 	}
 	render(){
-		const {nativeWidth, nativeHeight, pan, brushSize, brushColor, brushColorAlt} = this.state;
+		const {nativeWidth, nativeHeight, pan, brushSize, brushColor, brushColorAlt, brushVisible} = this.state;
 		const scale = this.getScale();
 		// Set up canvas style
 		const width = Math.round(nativeWidth * scale);
@@ -584,7 +600,7 @@ class CanvasSpace extends React.Component{
 		//
 		return (
 			<div className="canvasWorkArea w-100 h-100 flex">
-				<BrushCursor brushSize={brushSize} getMousePosition={this.getMousePosition} scale={scale}/>
+				{brushVisible && <BrushCursor brushSize={brushSize} getMousePosition={this.getMousePosition} scale={scale}/>}
 				<Toolbox 
 					ref="toolbox"
 					brushSize={brushSize} 

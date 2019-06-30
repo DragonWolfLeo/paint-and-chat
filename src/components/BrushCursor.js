@@ -11,11 +11,14 @@ class BrushCursor extends React.Component {
 		const position = this.props.getMousePosition(event, document.body);
 		this.setState({position});
 	}
+	onTouch = event => this.onMouseMove(event.touches[0]);
 	// Lifecycle hooks
 	componentDidMount(){
 		// Add mousemove event listener
 		this.setup = eventListenerSetup(document.body,
 			["mousemove", this.onMouseMove],
+			["touchmove", this.onTouch, {passive: false}],
+			["touchstart", this.onTouch, {passive: false}],
 		);
 		this.setup.add();
 	}
