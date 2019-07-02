@@ -43,6 +43,7 @@ const ACTIONS = Object.freeze({
 });
 
 const STARTING_CHAT_WIDTH = 350;
+const TOOLBOX_WIDTH = 80;
 
 class CanvasSpace extends React.Component{
 	constructor(props){
@@ -72,6 +73,7 @@ class CanvasSpace extends React.Component{
 	mouseIsOverCanvasWindow = false; // Updated onMouseMove
 	mousePosition = null; // The mouse location relative to the canvas
 	windowPosition = null; // The mouse location relative to the window
+	touchScaleState = null; // Touch locations relative to the window; used for scaling
 	panPosition = null; // The current pan, stored here to be independent of the state's asynchronous nature
 	canvasState = {
 		dirty: false,
@@ -282,23 +284,42 @@ class CanvasSpace extends React.Component{
 	onContextMenu = event => event.preventDefault(); // Disable context menu
 	onWheel = event => {
 		event.preventDefault(); // Prevent scrolling
-		(event.ctrlKey ? this.onZoom : this.onScroll)(event); // Zoom or scroll depending if ctrl is pressed
+		(event.ctrlKey ? this.onWheelZoom : this.onScroll)(event); // Zoom or scroll depending if ctrl is pressed
 	}
-	onZoom = event => {
+	onWheelZoom = event => {
 		const max = 0.1;
 		const delta = absValueMax(event.deltaY, max);
-		const {currentTarget: {clientWidth, clientHeight}, clientX, clientY} = event;
+		return this.onZoom(event, event.currentTarget, delta);
+	}
+	onZoom = (event, currentTarget, delta, scaleRatio) => {
+		const {clientX, clientY} = event;
+		const {clientWidth, clientHeight} = currentTarget;
 		// Get distance of mouse cursor from the center
 		const distance = [
-			clientX - (clientWidth/2),
+			(clientX-TOOLBOX_WIDTH) - (clientWidth/2),
 			clientY - (clientHeight/2),
 		];
 		const {zoom: prevZoom} = this.state;
-		const zoom =  prevZoom - delta;
-		const scaleRatio = this.getScale(zoom)/this.getScale(prevZoom);
+		const zoom = prevZoom - delta;
+		// Get scaleRatio or calculate if not given
+		scaleRatio = scaleRatio || this.getScale(zoom)/this.getScale(prevZoom);
 		// Pan towards the mouse location
 		const pan = distance.map((d, i) => -((d - this.panPosition[i]) * scaleRatio) + d);
 		this.setState({zoom, pan},()=>this.panPosition = pan);
+	}
+	onMultitouchZoom = event => {
+		const {touches, currentTarget} = event;
+		// Map into an array of coordinates
+		const currentPositions = [touches[0], touches[1]].map(event=>this.getMousePosition(event, this.refs.canvasWindow))
+		// Store distance
+		const currentScaleState = Math.hypot(...subPositions(...currentPositions));
+		if (this.touchScaleState) {
+			const scaleRatio = currentScaleState/this.touchScaleState;
+			const delta = -this.getZoom(scaleRatio);
+			this.onZoom(touches[0], currentTarget, delta);
+		}
+		// Save previous positions
+		this.touchScaleState = currentScaleState;
 	}
 	onScroll = event => {
 		const max = 20;
@@ -438,6 +459,7 @@ class CanvasSpace extends React.Component{
 			this.setBrushVisibility(false);
 			this.touchState.multitouch = true;
 			this.windowPosition = this.getMousePosition(touchEvent, this.refs.canvasWindow);
+			this.touchScaleState = null; // Reset by onMultitouchZoom
 		} else {
 			// Single touch
 			this.setBrushVisibility(true);
@@ -448,7 +470,8 @@ class CanvasSpace extends React.Component{
 		}
 	}
 	onTouchEnd = event => {
-		this.windowPosition = null; // Reset windowPosition so it's reset by onPan
+		this.windowPosition = null; // Reset by onPan
+		this.touchScaleState = null; // Reset by onMultitouchZoom
 		if(event.touches.length > 0) return;
 		// Deactivate if no touches are active
 		this.setBrushVisibility(false);
@@ -459,17 +482,18 @@ class CanvasSpace extends React.Component{
 	onTouchMove = event => {
 		event.preventDefault(); // Prevent mouse events
 		const {touches} = event;
-		const touchEvent = touches[0];
 		// Pan or draw depending on the number of touches
-		(this.touchState.multitouch ? this.onPan : this.onDrawLine)(touchEvent);
+		if(this.touchState.multitouch){
+			if(touches.length > 1) this.onMultitouchZoom(event);
+			this.onPan(touches[0]);
+		}else{
+			this.onDrawLine(touches[0]);
+		}
 	}
 	// Other functions
-	getScale = zoom => {
-		return 2**(zoom || this.state.zoom);
-	}
-	getResetChatWidth = () => {
-		return [-this.chatWidth/2, 0];
-	}
+	getScale = zoom => Math.E**(zoom || this.state.zoom);
+	getZoom = scale => Math.log(scale);
+	getResetChatWidth = () => [-this.chatWidth/2, 0];
 	setBrushSize = (size, onSetBrushSizeFn) => {
 		// Clamp within range
 		if(size < MIN_BRUSH_SIZE) size = MIN_BRUSH_SIZE;
