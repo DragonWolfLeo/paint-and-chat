@@ -73,7 +73,6 @@ class CanvasSpace extends React.Component{
 	mouseIsOverCanvasWindow = false; // Updated onMouseMove
 	mousePosition = null; // The mouse location relative to the canvas
 	windowPosition = null; // The mouse location relative to the window
-	touchScaleState = null; // Touch locations relative to the window; used for scaling
 	panPosition = null; // The current pan, stored here to be independent of the state's asynchronous nature
 	canvasState = {
 		dirty: false,
@@ -83,8 +82,13 @@ class CanvasSpace extends React.Component{
 		maxY: 0,
 	}
 	touchState = {
-		active: false,
 		multitouch: false,
+		scaleMode: false,
+		distance: null,
+		resetScaleMode: function() {
+			this.scaleMode = false;
+			this.distance = null;
+		}
 	}
 	chatWidth = STARTING_CHAT_WIDTH;
 
@@ -312,14 +316,22 @@ class CanvasSpace extends React.Component{
 		// Map into an array of coordinates
 		const currentPositions = [touches[0], touches[1]].map(event=>this.getMousePosition(event, this.refs.canvasWindow))
 		// Store distance
-		const currentScaleState = Math.hypot(...subPositions(...currentPositions));
-		if (this.touchScaleState) {
-			const scaleRatio = currentScaleState/this.touchScaleState;
+		const currentDistance = Math.hypot(...subPositions(...currentPositions));
+		if (this.touchState.distance) {
+			const scaleRatio = currentDistance/this.touchState.distance;
+			if(!this.touchState.scaleMode) { 
+				// Check scaling threshold
+				if(Math.abs(1-scaleRatio) > 0.1) {
+					this.touchState.scaleMode = true;
+				} else { 
+					return;
+				}
+			};
 			const delta = -this.getZoom(scaleRatio);
 			this.onZoom(touches[0], currentTarget, delta);
 		}
 		// Save previous positions
-		this.touchScaleState = currentScaleState;
+		this.touchState.distance = currentDistance;
 	}
 	onScroll = event => {
 		const max = 20;
@@ -447,7 +459,6 @@ class CanvasSpace extends React.Component{
 	// Touch events
 	onTouchStart = event => {
 		event.preventDefault(); // Prevent mouse events
-		this.touchState.active = true;
 		// Check number of touches
 		const {touches} = event;
 		const touchEvent = touches[0];
@@ -459,7 +470,7 @@ class CanvasSpace extends React.Component{
 			this.setBrushVisibility(false);
 			this.touchState.multitouch = true;
 			this.windowPosition = this.getMousePosition(touchEvent, this.refs.canvasWindow);
-			this.touchScaleState = null; // Reset by onMultitouchZoom
+			this.touchState.resetScaleMode();
 		} else {
 			// Single touch
 			this.setBrushVisibility(true);
@@ -471,11 +482,10 @@ class CanvasSpace extends React.Component{
 	}
 	onTouchEnd = event => {
 		this.windowPosition = null; // Reset by onPan
-		this.touchScaleState = null; // Reset by onMultitouchZoom
+		this.touchState.resetScaleMode();
 		if(event.touches.length > 0) return;
 		// Deactivate if no touches are active
 		this.setBrushVisibility(false);
-		this.touchState.active = false;
 		this.mouseIsPressed[MOUSE.LEFT] = false;
 		this.deactivateMouseBindings(event, MOUSE.LEFT);
 	}
