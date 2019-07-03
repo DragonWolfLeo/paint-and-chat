@@ -50,38 +50,40 @@ class Toolbox extends React.Component {
 	render(){
 		const {brushSize, brushColor, brushColorAlt, saveCanvas} = this.props;
 		return (
-			<div className="toolbox applightbg flex flex-column items-center black">
+			<div className="toolbox h-100-ns flex flex-wrap flex-nowrap-ns flex-column-ns overflow-y-auto-ns overflow-x-auto applightbg items-center black">
 				<button className="mv2 black" onClick={saveCanvas}>
 					<ion-icon name="ios-save" size="large"/>
 				</button>
 				<Section label="Size">
-					{BRUSH_SIZES.map(size=>{
-						return <BrushIcon key={size} size={size} selected={brushSize===size} setBrushSize={this.onBrushSizeButton}/>
-					})}
-					<input 
-						ref="sizeInput" 
-						className="w-100 tc" 
-						type="number"
-						min={MIN_BRUSH_SIZE} 
-						max={MAX_BRUSH_SIZE}
-						onChange={this.onSizeInputChange}
-						onBlur={this.onSizeInputBlur}
-					/>
+					<div className="brushSectionContent flex flex-column-ns ph1 ph0-ns">
+						{BRUSH_SIZES.map(size=>{
+							return <BrushIcon key={size} size={size} selected={brushSize===size} setBrushSize={this.onBrushSizeButton}/>
+						})}
+						<input 
+							ref="sizeInput" 
+							className="w-100-ns w3 tc" 
+							type="number"
+							min={MIN_BRUSH_SIZE} 
+							max={MAX_BRUSH_SIZE}
+							onChange={this.onSizeInputChange}
+							onBlur={this.onSizeInputBlur}
+						/>
+					</div>
 				</Section>
-				<Section label="Color 1" nomargin>
-					<label className="db w-100 h2" style={{
+				<Section label="Color" nomargin>
+					<label className="db w-100 h2-ns h-100" style={{
 						backgroundColor: brushColor,
 					}}>
 						<input 
 							ref="color1Input"
-							className="dn colorInput w-100"
+							className="colorInput dn w-100"
 							type="color" 
 							onChange={this.onSetBrushColor(false)}
 						/>
 					</label>
 				</Section>
-				<Section label="Color 2" nomargin>
-					<label className="db w-100 h2" style={{
+				<Section label="Color 2" nomargin hideonmobile>
+					<label className="db w-100 h2-ns h-100" style={{
 						backgroundColor: brushColorAlt,
 					}}>
 						<input 
@@ -92,17 +94,18 @@ class Toolbox extends React.Component {
 						/>
 					</label>
 				</Section>
-				<Section label="Palette" nomargin>
+				<Section label="Palette" className="w-100" nomargin>
 					<Palette choosePaletteColor={this.choosePaletteColor}/>
 				</Section>
 			</div>
 		);
 	}
 }
-const Section = ({label, children, nomargin}) => {
-	const marginclass = nomargin ? "" : "mb2";
-	return <div className={`w-100 ${marginclass}`}>
-		{label && <h5 className={`appdarkbg w-100 bt bb b--black white pv1 ma0 ${marginclass}`}>{label}</h5>}
+const Section = ({label, children, nomargin, hideonmobile, className}) => {
+	const marginclass = nomargin ? "" : "mb2-ns";
+	const flexclass = hideonmobile ? "dn flex-ns" : "flex";
+	return <div className={`section ${flexclass} flex-column ${marginclass} ${className}`}>
+		{label && <h5 className={`appdarkbg w-100 bt-ns bb b--black white pv1 ph3 ph0-ns ma0 ${marginclass}`}>{label}</h5>}
 		{children}
 	</div>
 }
@@ -110,8 +113,8 @@ const Section = ({label, children, nomargin}) => {
 const BrushIcon = ({size, selected, setBrushSize}) => {
 	const width = `${size}px`, height = width;
 	return (
-		<div className="h2 w-100 mb1" onClick={()=>setBrushSize(size)}>
-			<div className={`brushIcon br2 h-100 flex justify-center items-center mh1 ${selected ? "selected" : ""}`}>
+		<div className="h2-ns w-100-ns w2 mb1-ns mr0-ns mr1 relative" onClick={()=>setBrushSize(size)}>
+			<div className={`brushIcon stretchToMargin flex flex-column justify-center items-center br2 mh1-ns mv0-ns mv1 ${selected ? "selected" : ""}`}>
 				<div 
 					className="br-100 bg-black"
 					style={{width,height}}

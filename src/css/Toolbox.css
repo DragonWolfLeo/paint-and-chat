@@ -1,16 +1,29 @@
 .toolbox {
-	width: 80px;
+	/* width: 100%; */
 	z-index: 100;
 	border: black solid;
-	border-width: 0 2px 0 0;
-	overflow-y: auto;
+	border-width: 2px 0 0 0;
+	flex-shrink: 0;
+	flex-grow: 0;
+}
+.toolbox .section {
+	height: 80px;
+	flex-grow: 1;
+}
+.toolbox .brushSectionContent {
+	flex-grow: 1;
 }
 .toolbox button{
 	padding: 0;
 	line-height: 0;
 }
+.toolbox input{
+	height: fit-content;
+	margin: auto;
+}
 .brushIcon {
-	transition: all 0.3s ease-out;
+	transition: background-color 0.3s ease-out,
+	border-color 0.3s ease-out;
 	border: #ffffff00 1px solid;
 }
 .brushIcon:hover {
@@ -19,4 +32,23 @@
 .selected {
 	background: #ffffffa0;
 	border-color: white;
+}
+.stretchToMargin {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	right: 0;
+	left: 0;
+}
+@media only screen and (min-width: 30em) {
+	.toolbox{
+		width: 80px;
+		height: 100%;
+		border-width: 0 2px 0 0;
+	}
+	.toolbox .section {
+		width: 100%;
+		height: auto;
+		flex-grow: 0;
+	}
 }

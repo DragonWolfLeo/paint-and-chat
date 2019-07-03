@@ -633,7 +633,7 @@ class CanvasSpace extends React.Component{
 		);
 		//
 		return (
-			<div className="canvasWorkArea w-100 h-100 flex">
+			<div className="canvasWorkArea w-100 h-100">
 				{brushVisible && <BrushCursor brushSize={brushSize} getMousePosition={this.getMousePosition} scale={scale}/>}
 				<Toolbox 
 					ref="toolbox"
