@@ -50,7 +50,7 @@ class Toolbox extends React.Component {
 	render(){
 		const {brushSize, brushColor, brushColorAlt, saveCanvas} = this.props;
 		return (
-			<div className="toolbox h-100-ns flex flex-wrap flex-nowrap-ns flex-column-ns overflow-y-auto-ns overflow-x-auto applightbg items-center black">
+			<div ref="element" className="toolbox h-100-ns flex flex-wrap flex-nowrap-ns flex-column-ns overflow-y-auto-ns overflow-x-auto applightbg items-center black">
 				<button className="mv2 black" onClick={saveCanvas}>
 					<ion-icon name="ios-save" size="large"/>
 				</button>

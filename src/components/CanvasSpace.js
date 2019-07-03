@@ -52,7 +52,7 @@ class CanvasSpace extends React.Component{
 			nativeWidth: 0,
 			nativeHeight: 0,
 			zoom: 0,
-			pan: this.getResetChatWidth(),
+			pan: this.getResetPanPosition(),
 			brushSize: 4,
 			brushColor: "#000000",
 			brushColorAlt: "#ffffff",
@@ -300,7 +300,7 @@ class CanvasSpace extends React.Component{
 		const {clientWidth, clientHeight} = currentTarget;
 		// Get distance of mouse cursor from the center
 		const distance = [
-			(clientX-TOOLBOX_WIDTH) - (clientWidth/2),
+			clientX - (clientWidth/2),
 			clientY - (clientHeight/2),
 		];
 		const {zoom: prevZoom} = this.state;
@@ -341,7 +341,7 @@ class CanvasSpace extends React.Component{
 	}
 	resetPanAndZoom = () => {
 		// Reset pan position and zoom
-		const pan = this.getResetChatWidth();
+		const pan = this.getResetPanPosition();
 		this.setState({pan, zoom: 0},()=>this.panPosition = pan);
 	}
 	onKeyDown = event => {
@@ -503,7 +503,20 @@ class CanvasSpace extends React.Component{
 	// Other functions
 	getScale = zoom => Math.E**(zoom || this.state.zoom);
 	getZoom = scale => Math.log(scale);
-	getResetChatWidth = () => [-this.chatWidth/2, 0];
+	getResetPanPosition = () =>{
+		// Determine whether on desktop or mobile
+		const desktopMode = window.matchMedia("only screen and (min-width: 30em)").matches;
+		// Define lengths in case toolbox isn't available
+		let toolboxWidth = TOOLBOX_WIDTH;
+		let toolboxHeight = 0;
+		if(this.refs.toolbox && this.refs.toolbox.refs.element){
+			// Set to toolbox's lengths
+			const {width, height} = this.refs.toolbox.refs.element.getBoundingClientRect();
+			toolboxWidth = desktopMode ? width : 0;
+			toolboxHeight = desktopMode ? 0 : height;
+		}
+		return [(toolboxWidth-this.chatWidth)/2, -toolboxHeight/2];
+	}
 	setBrushSize = (size, onSetBrushSizeFn) => {
 		// Clamp within range
 		if(size < MIN_BRUSH_SIZE) size = MIN_BRUSH_SIZE;
