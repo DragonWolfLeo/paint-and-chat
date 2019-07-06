@@ -2,6 +2,7 @@ import React from "react";
 import '../css/Toolbox.css'
 import Palette from "./Palette";
 import {MIN_BRUSH_SIZE, MAX_BRUSH_SIZE} from '../constants';
+import ButtonBar from "./ButtonBar";
 
 const BRUSH_SIZES = Object.freeze([24, 16, 12, 8, 4]);
 
@@ -48,55 +49,55 @@ class Toolbox extends React.Component {
 		this.updateInputBrushSize();
 	}
 	render(){
-		const {brushSize, brushColor, brushColorAlt, saveCanvas} = this.props;
+		const {brushSize, brushColor, brushColorAlt, onButtonBar, tool} = this.props;
 		return (
-			<div ref="element" className="toolbox h-100-ns flex flex-wrap flex-nowrap-ns flex-column-ns overflow-y-auto-ns overflow-x-auto applightbg items-center black">
-				<button className="mv2 black" onClick={saveCanvas}>
-					<ion-icon name="ios-save" size="large"/>
-				</button>
-				<Section label="Size">
-					<div className="brushSectionContent flex flex-column-ns ph1 ph0-ns">
-						{BRUSH_SIZES.map(size=>{
-							return <BrushIcon key={size} size={size} selected={brushSize===size} setBrushSize={this.onBrushSizeButton}/>
-						})}
-						<input 
-							ref="sizeInput" 
-							className="w-100-ns w3 tc" 
-							type="number"
-							min={MIN_BRUSH_SIZE} 
-							max={MAX_BRUSH_SIZE}
-							onChange={this.onSizeInputChange}
-							onBlur={this.onSizeInputBlur}
-						/>
-					</div>
-				</Section>
-				<Section label="Color" nomargin>
-					<label className="db w-100 h2-ns h-100" style={{
-						backgroundColor: brushColor,
-					}}>
-						<input 
-							ref="color1Input"
-							className="colorInput dn w-100"
-							type="color" 
-							onChange={this.onSetBrushColor(false)}
-						/>
-					</label>
-				</Section>
-				<Section label="Color 2" nomargin hideonmobile>
-					<label className="db w-100 h2-ns h-100" style={{
-						backgroundColor: brushColorAlt,
-					}}>
-						<input 
-							ref="color2Input" 
-							className="colorInput dn w-100" 
-							type="color" 
-							onChange={this.onSetBrushColor(true)}
-						/>
-					</label>
-				</Section>
-				<Section label="Palette" className="w-100" nomargin>
-					<Palette choosePaletteColor={this.choosePaletteColor}/>
-				</Section>
+			<div ref="element" className="toolbox black">
+				<ButtonBar onButtonBar={onButtonBar} tool={tool} />
+				<div className={"h-100-ns flex flex-wrap flex-nowrap-ns flex-column-ns overflow-y-auto-ns applightbg items-center"}>
+					<Section label="Size">
+						<div className="brushSectionContent flex flex-column-ns pl1 pl0-ns">
+							{BRUSH_SIZES.map(size=>{
+								return <BrushIcon key={size} size={size} selected={brushSize===size} setBrushSize={this.onBrushSizeButton}/>
+							})}
+							<input 
+								ref="sizeInput" 
+								className="w-100-ns w3 tc" 
+								type="number"
+								min={MIN_BRUSH_SIZE} 
+								max={MAX_BRUSH_SIZE}
+								onChange={this.onSizeInputChange}
+								onBlur={this.onSizeInputBlur}
+							/>
+						</div>
+					</Section>
+					<Section label="Color" nomargin>
+						<label className="db w-100 h2-ns h-100 pointer" style={{
+							backgroundColor: brushColor,
+						}}>
+							<input 
+								ref="color1Input"
+								className="colorInput dn w-100"
+								type="color" 
+								onChange={this.onSetBrushColor(false)}
+							/>
+						</label>
+					</Section>
+					<Section label="Color 2" nomargin hideonmobile>
+						<label className="db w-100 h2-ns h-100 pointer" style={{
+							backgroundColor: brushColorAlt,
+						}}>
+							<input 
+								ref="color2Input" 
+								className="colorInput dn w-100" 
+								type="color" 
+								onChange={this.onSetBrushColor(true)}
+							/>
+						</label>
+					</Section>
+					<Section label="Palette" className="w-100" nomargin>
+						<Palette choosePaletteColor={this.choosePaletteColor}/>
+					</Section>
+				</div>
 			</div>
 		);
 	}
@@ -105,7 +106,7 @@ const Section = ({label, children, nomargin, hideonmobile, className}) => {
 	const marginclass = nomargin ? "" : "mb2-ns";
 	const flexclass = hideonmobile ? "dn flex-ns" : "flex";
 	return <div className={`section ${flexclass} flex-column ${marginclass} ${className}`}>
-		{label && <h5 className={`appdarkbg w-100 bt-ns bb b--black white pv1 ph3 ph0-ns ma0 ${marginclass}`}>{label}</h5>}
+		{label && <h5 className={`appdarkbg w-100 bt bb b--black white pv1 ph3 ph0-ns ma0 ${marginclass}`}>{label}</h5>}
 		{children}
 	</div>
 }
@@ -113,7 +114,7 @@ const Section = ({label, children, nomargin, hideonmobile, className}) => {
 const BrushIcon = ({size, selected, setBrushSize}) => {
 	const width = `${size}px`, height = width;
 	return (
-		<div className="h2-ns w-100-ns w2 mb1-ns mr0-ns mr1 relative" onClick={()=>setBrushSize(size)}>
+		<div className="h2-ns w-100-ns w2 mb1-ns mr0-ns mr1 relative pointer" onClick={()=>setBrushSize(size)}>
 			<div className={`brushIcon stretchToMargin flex flex-column justify-center items-center br2 mh1-ns mv0-ns mv1 ${selected ? "selected" : ""}`}>
 				<div 
 					className="br-100 bg-black"

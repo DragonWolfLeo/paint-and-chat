@@ -1,0 +1,22 @@
+.buttonBar{
+	z-index: 200;
+	top: 0;
+	left: 0;
+}
+.buttonBar button{
+	cursor: pointer;
+	padding: 4px;
+	margin: 4px 0 0 4px;
+	line-height: 0;
+	border-radius: 100%;
+	border: solid black 1px;
+}
+.buttonBar .active{
+	background: #e70000;
+}
+@media only screen and (min-width: 30em) {
+	.buttonBar{
+		top: 0;
+		left: 80px;
+	}
+}

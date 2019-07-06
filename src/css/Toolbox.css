@@ -2,7 +2,7 @@
 	position: fixed;
 	z-index: 100;
 	border: black solid;
-	border-width: 2px 0 0 0;
+	border-width: 1px 0 0 0;
 	width: 100%;
 	flex-shrink: 0;
 	flex-grow: 0;
@@ -13,10 +13,6 @@
 }
 .toolbox .brushSectionContent {
 	flex-grow: 1;
-}
-.toolbox button{
-	padding: 0;
-	line-height: 0;
 }
 .toolbox input{
 	height: fit-content;

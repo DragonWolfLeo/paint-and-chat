@@ -11,9 +11,23 @@ const MESSAGE_TYPES = Object.freeze({
 // Tools
 const MIN_BRUSH_SIZE = 1;
 const MAX_BRUSH_SIZE = 100;
+const TOOLS = Object.freeze({
+	ANY: null,
+	DRAW: Symbol(),
+	COLOR_PICK: Symbol(),
+});
+
+// Button Bar
+const BUTTONBAR_ACTIONS = Object.freeze({
+	SAVE: Symbol(),
+	COLOR_PICK: Symbol(),
+	CHAT: Symbol(),
+});
 
 export {
 	MESSAGE_TYPES,
 	MIN_BRUSH_SIZE,
 	MAX_BRUSH_SIZE,
+	TOOLS,
+	BUTTONBAR_ACTIONS,
 };

@@ -1,10 +1,10 @@
-.canvasWorkArea{
+.canvasWorkArea {
 	position: relative;
 	overflow: hidden;
 	display: flex;
 	flex-direction: column-reverse;
 }
-.canvasSpaceContainer{
+.canvasSpaceContainer {
 	width: 100%;
 	height: 100%;
 	display: flex;
@@ -17,6 +17,9 @@
 	-o-user-select: none;
 	user-select: none;
 	cursor: none;
+}
+.showCursor {
+	cursor: auto;
 }
 .canvasSpace{
 	position: absolute;

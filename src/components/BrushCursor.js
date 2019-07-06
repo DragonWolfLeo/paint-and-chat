@@ -27,7 +27,7 @@ class BrushCursor extends React.Component {
 		this.setup.remove();
 	}
 	render(){
-		const {brushSize, scale} = this.props;
+		const {brushSize, scale, visible} = this.props;
 		const size = Math.ceil(brushSize*scale);
 		const {position} = this.state;
 		return (
@@ -38,6 +38,7 @@ class BrushCursor extends React.Component {
 					top: position[1] - size/2,
 					width: `${size}px`,
 					height: `${size}px`,
+					visibility: visible ? "visible" : "hidden",
 				}}
 			/>
 		);

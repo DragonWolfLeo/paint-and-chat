@@ -3,7 +3,7 @@ import '../css/CanvasSpace.css';
 import Toolbox from './Toolbox';
 import BrushCursor from './BrushCursor';
 import {eventListenerSetup} from '../util/util';
-import {MIN_BRUSH_SIZE, MAX_BRUSH_SIZE} from '../constants';
+import {MIN_BRUSH_SIZE, MAX_BRUSH_SIZE, TOOLS, BUTTONBAR_ACTIONS} from '../constants';
 
 // Utility functions
 // const addPositions = (arr1, arr2) => arr1.map((first, i) => first + arr2[i]);
@@ -45,6 +45,36 @@ const ACTIONS = Object.freeze({
 const STARTING_CHAT_WIDTH = 350;
 const TOOLBOX_WIDTH = 80;
 
+// Control binding
+const keyedMouseControls = {};
+const unkeyedMouseControls = {};
+const addMouseBinding = (tool, name, ...bindings) => {
+	bindings.forEach(bind => {
+		let mouse, key = null;
+		if(typeof(bind)==="object"){
+			[mouse, key] = bind;
+		} else {
+			mouse = bind;
+		}
+		const targetControls = key !== null ? keyedMouseControls : unkeyedMouseControls;
+		if(!targetControls[tool]) targetControls[tool] = [];
+		if(!targetControls[tool][mouse]) targetControls[tool][mouse] = [];
+		targetControls[tool][mouse].push({name, key});
+	});
+}
+// Mouse bindings; 
+addMouseBinding(TOOLS.ANY, ACTIONS.PAN, [MOUSE.LEFT, KEY.SPACE], MOUSE.MIDDLE);
+addMouseBinding(TOOLS.DRAW, ACTIONS.DRAW, MOUSE.LEFT);
+addMouseBinding(TOOLS.DRAW, ACTIONS.ERASE, MOUSE.RIGHT);
+addMouseBinding(TOOLS.ANY, ACTIONS.DRAW_COLOR_PICK, [MOUSE.LEFT, KEY.ALT]);
+addMouseBinding(TOOLS.ANY, ACTIONS.ERASE_COLOR_PICK, [MOUSE.RIGHT, KEY.ALT]);
+addMouseBinding(TOOLS.COLOR_PICK, ACTIONS.DRAW_COLOR_PICK, MOUSE.LEFT);
+addMouseBinding(TOOLS.COLOR_PICK, ACTIONS.ERASE_COLOR_PICK, MOUSE.RIGHT);
+
+// Lock binding sets as they should no longer be modified
+Object.freeze(keyedMouseControls);
+Object.freeze(unkeyedMouseControls);
+
 class CanvasSpace extends React.Component{
 	constructor(props){
 		super(props);
@@ -52,23 +82,14 @@ class CanvasSpace extends React.Component{
 			nativeWidth: 0,
 			nativeHeight: 0,
 			zoom: 0,
-			pan: this.getResetPanPosition(),
+			pan: [0,0],
 			brushSize: 4,
 			brushColor: "#000000",
 			brushColorAlt: "#ffffff",
 			brushVisible: false,
+			tool: TOOLS.DRAW,
 		}
 		this.panPosition = [...this.state.pan];
-		// Mouse bindings; 
-		this.addMouseBinding(ACTIONS.PAN, [MOUSE.LEFT, KEY.SPACE], MOUSE.MIDDLE);
-		this.addMouseBinding(ACTIONS.DRAW, MOUSE.LEFT);
-		this.addMouseBinding(ACTIONS.ERASE, MOUSE.RIGHT);
-		this.addMouseBinding(ACTIONS.DRAW_COLOR_PICK, [MOUSE.LEFT, KEY.ALT]);
-		this.addMouseBinding(ACTIONS.ERASE_COLOR_PICK, [MOUSE.RIGHT, KEY.ALT]);
-
-		// Lock binding sets as they should no longer be modified
-		Object.freeze(this.keyedMouseControls);
-		Object.freeze(this.unkeyedMouseControls);
 	}
 	mouseIsOverCanvasWindow = false; // Updated onMouseMove
 	mousePosition = null; // The mouse location relative to the canvas
@@ -96,25 +117,6 @@ class CanvasSpace extends React.Component{
 	keyIsPressed = [];
 	mouseIsPressed = [];
 	controlActive = {};
-
-	// To be used by onMouseDown and onMouseUp. Add bindings in the constructor using addMouseBinding.
-	keyedMouseControls = [];
-	unkeyedMouseControls = [];
-	addMouseBinding = (name, ...bindings) => {
-		bindings.forEach(bind => {
-			let mouse, key = null;
-			if(typeof(bind)==="object"){
-				[mouse, key] = bind;
-			} else {
-				mouse = bind;
-			}
-			const targetControls = key !== null ? this.keyedMouseControls : this.unkeyedMouseControls;
-			if(!targetControls[mouse]){
-				targetControls[mouse] = [];
-			}
-			targetControls[mouse].push({name, key});
-		});
-	}
 
 	// Events
 	onMouseMove = event => {
@@ -236,11 +238,18 @@ class CanvasSpace extends React.Component{
 		const y = event.clientY - rect.y;
 		return [x/scale, y/scale];
 	}
+	getBinds = (targetControls, mouseButton) => {
+		// Function to combine bindings for any and current tool
+		return [TOOLS.ANY, this.state.tool].reduce((acc, tool)=>{
+			const arr = targetControls[tool] && targetControls[tool][mouseButton];
+			if (arr) acc.push(...arr);
+			return acc;
+		},[]);
+	}
 	activateMouseBindings = (event, mouseButton) => {
 		// Enable keyed bindings
-		const mbind = this.keyedMouseControls[mouseButton];
 		let keyActive = false;
-		mbind && mbind.forEach(({name, key})=>{
+		this.getBinds(keyedMouseControls, mouseButton).forEach(({name, key})=>{
 			if(this.keyIsPressed[key]){
 				this.controlActive[name] = true;
 				this.onControlActivate(name, event);
@@ -250,8 +259,7 @@ class CanvasSpace extends React.Component{
 
 		// If no keyed bindings were activated, enable unkeyed
 		if(!keyActive){
-			const mbind = this.unkeyedMouseControls[mouseButton];
-			mbind && mbind.forEach(({name})=>{
+			this.getBinds(unkeyedMouseControls, mouseButton).forEach(({name})=>{
 				this.controlActive[name] = true;
 				this.onControlActivate(name, event);
 			});
@@ -259,16 +267,14 @@ class CanvasSpace extends React.Component{
 	}
 	deactivateMouseBindings = (event, mouseButton) => {
 		// Disable ALL keyed bindings
-		const mbind = this.keyedMouseControls[mouseButton];
-		mbind && mbind.forEach(({name})=>{
+		this.getBinds(keyedMouseControls, mouseButton).forEach(({name})=>{
 			this.controlActive[name] = false;
 			this.onControlDeactivate(name, event);
 		});
 
 		{
 			// Disable keyed bindings
-			const mbind = this.unkeyedMouseControls[mouseButton];
-			mbind && mbind.forEach(({name})=>{
+			this.getBinds(unkeyedMouseControls, mouseButton).forEach(({name})=>{
 				this.controlActive[name] = false;
 				this.onControlDeactivate(name, event);
 			});
@@ -500,6 +506,20 @@ class CanvasSpace extends React.Component{
 			this.onDrawLine(touches[0]);
 		}
 	}
+	// Button bar
+	onButtonBar = type => {
+		switch(type){
+			default: return;
+			case BUTTONBAR_ACTIONS.SAVE:
+				return this.saveCanvas();
+			case BUTTONBAR_ACTIONS.COLOR_PICK:
+				return this.setState(prevState=>({
+					tool: prevState.tool === TOOLS.COLOR_PICK ? TOOLS.DRAW : TOOLS.COLOR_PICK
+				}));
+			case BUTTONBAR_ACTIONS.CHAT:
+				return;
+		}
+	}
 	// Other functions
 	getScale = zoom => Math.E**(zoom || this.state.zoom);
 	getZoom = scale => Math.log(scale);
@@ -528,7 +548,9 @@ class CanvasSpace extends React.Component{
 	setBrushColor = (color, isAlt, onSetBrushColorFn) => {
 		const target = isAlt ? "brushColorAlt" : "brushColor";
 		if(color !== this.state[target]){
-			this.setState({[target]: color}, onSetBrushColorFn);
+			this.setState({[target]: color, tool: TOOLS.DRAW}, onSetBrushColorFn);
+		} else {
+			this.setState({tool: TOOLS.DRAW});
 		}
 	}
 	setBrushColorAtMouse = (event, isAlt) => {
@@ -589,6 +611,8 @@ class CanvasSpace extends React.Component{
 	}
 	// Lifecycle hooks
 	componentDidMount(){
+		// Set initial pan and zoom
+		this.resetPanAndZoom()
 		// Get event listener setup functions
 		const eventListenerSetups = [];
 		eventListenerSetups.push(eventListenerSetup(document.body,
@@ -620,7 +644,16 @@ class CanvasSpace extends React.Component{
 		}
 	}
 	render(){
-		const {nativeWidth, nativeHeight, pan, brushSize, brushColor, brushColorAlt, brushVisible} = this.state;
+		const {
+			nativeWidth, 
+			nativeHeight,
+			pan, 
+			brushSize, 
+			brushColor, 
+			brushColorAlt, 
+			brushVisible,
+			tool,
+		} = this.state;
 		const scale = this.getScale();
 		// Set up canvas style
 		const width = Math.round(nativeWidth * scale);
@@ -644,10 +677,9 @@ class CanvasSpace extends React.Component{
 				height={nativeHeight}
 			/>
 		);
-		//
 		return (
 			<div className="canvasWorkArea w-100 h-100">
-				{brushVisible && <BrushCursor brushSize={brushSize} getMousePosition={this.getMousePosition} scale={scale}/>}
+				<BrushCursor brushSize={brushSize} getMousePosition={this.getMousePosition} scale={scale} visible={brushVisible && tool === TOOLS.DRAW}/>
 				<Toolbox 
 					ref="toolbox"
 					brushSize={brushSize} 
@@ -655,9 +687,10 @@ class CanvasSpace extends React.Component{
 					brushColorAlt={brushColorAlt} 
 					setBrushSize={this.setBrushSize} 
 					setBrushColor={this.setBrushColor}
-					saveCanvas={this.saveCanvas}
+					onButtonBar={this.onButtonBar}
+					tool={tool}
 				/>
-				<div className="canvasSpaceContainer"
+				<div className={`canvasSpaceContainer ${tool === TOOLS.COLOR_PICK ? "showCursor" : ""}`}
 					ref="canvasWindow"
 					onMouseDown={this.onMouseDown}
 					onContextMenu={this.onContextMenu}

@@ -31,7 +31,7 @@ const Palette = ({choosePaletteColor}) => {
 			return false;
 		}
 	}
-	return <div className="palette flex flex-wrap flex-row-ns flex-column h-100">
+	return <div className="palette flex flex-wrap flex-row-ns flex-column h-100 pointer">
 		{colors.map((color, i)=>{
 			return <div 
 				key={i}
