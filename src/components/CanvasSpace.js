@@ -272,14 +272,11 @@ class CanvasSpace extends React.Component{
 			this.onControlDeactivate(name, event);
 		});
 
-		{
-			// Disable keyed bindings
-			this.getBinds(unkeyedMouseControls, mouseButton).forEach(({name})=>{
-				this.controlActive[name] = false;
-				this.onControlDeactivate(name, event);
-			});
-		}
-
+		// Disable keyed bindings
+		this.getBinds(unkeyedMouseControls, mouseButton).forEach(({name})=>{
+			this.controlActive[name] = false;
+			this.onControlDeactivate(name, event);
+		});
 	}
 	onMouseDown = event => {
 		this.mousePosition = this.getMousePosition(event, this.refs.drawingCanvas);
