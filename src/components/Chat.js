@@ -12,6 +12,7 @@ class Chat extends React.Component {
 		this.state = {
 			chatLog : new LinkedList(),
 			hidden: isDesktopMode() ? false : true,
+			transitioning: false,
 			newMessage: null,
 		}
 	}
@@ -36,6 +37,26 @@ class Chat extends React.Component {
 			this.setState({newMessage: null, chatLog});
 		}
 	}
+	onChangeCollapse = () => {
+		const {hidden, chatLog, newMessage} = this.state;
+		const newState = {hidden: !hidden, transitioning: true};
+		if(newMessage && !hidden){
+			// Clear new messages when closing
+			chatLog.detach(newMessage);
+			Object.assign(newState, {
+				newMessage: null,
+				chatLog,
+			});
+		}
+		this.setState(newState,()=>{
+			this.sendChatSizeToCanvasSpace();
+			this.sendChatNotificationToButtonBar();
+		});
+	}
+	onAnimationEnd = event => {
+		this.setState({transitioning: false});
+	}
+	// Actions
 	addMessage = message => {
 		const {chatLog, hidden, newMessage} = this.state;
 		const m = 
@@ -52,23 +73,7 @@ class Chat extends React.Component {
 			this.refs.chatList.queueScrollDown();
 			this.setState(newState, newState.newMessage && this.sendChatNotificationToButtonBar);
 		}
-	}
-	onChangeCollapse = () => {
-		const {hidden, chatLog, newMessage} = this.state;
-		const newState = {hidden: !hidden};
-		if(newMessage && !hidden){
-			// Clear new messages when closing
-			chatLog.detach(newMessage);
-			Object.assign(newState, {
-				newMessage: null,
-				chatLog,
-			});
-		}
-		this.setState(newState,()=>{
-			this.sendChatSizeToCanvasSpace();
-			this.sendChatNotificationToButtonBar();
-		});
-	}
+	} 
 	sendChatSizeToCanvasSpace = () => {
 		// Send chat width to CanvasSpace
 		const {props: {getCanvasSpace}, state: {hidden}} = this;
@@ -101,13 +106,15 @@ class Chat extends React.Component {
 		// Remove event listeners
 		if(this.eventListenerSetup) this.eventListenerSetup.remove();
 	}
-	componentDidUpdate(){
-	}
 	// Rendering
 	render(){
-		const {hidden, newMessage} = this.state;
+		const {hidden, transitioning, newMessage} = this.state;
+		// Choose class name for chat state
+		const chatStateClass = transitioning ?
+			`chat_${hidden ? "hide" : "show"}` :
+			(hidden ? "chat_hidden" : "");
 		return (
-			<div className={`chatContainer chat_${hidden ? "hide" : "show"}`}>
+			<div onAnimationEnd={this.onAnimationEnd} className={`chatContainer ${chatStateClass}`}>
 				<div 
 					className="chatCollapseBtn appdarkbg dn db-ns"
 					onClick={this.onChangeCollapse}
