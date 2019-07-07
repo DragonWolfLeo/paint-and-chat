@@ -5,7 +5,6 @@ import {Connection, checkRoom} from './api/api';
 import CanvasSpace from './components/CanvasSpace';
 import Chat from './components/Chat';
 import WelcomeScreen from './components/WelcomeScreen';
-import ButtonBar from './components/ButtonBar';
 
 // Utility functions
 const setHash = (room = "", replace = false) => {
