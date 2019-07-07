@@ -120,8 +120,8 @@ class Chat extends React.Component {
 						<h3 className="ma0 f5 f4-ns" >{`Room: ${this.props.room}`}</h3>
 					</div>
 					<ChatList ref="chatList" chatArray={this.state.chatLog.toArray()} />
-					<form className="flex pv2">
-						<input ref="chatTextField" className="f4 w-100 mr1" type="text" placeholder="Chat..." autoComplete="off" defaultValue="" maxLength="1000"/> 
+					<form className="flex pv2-ns pv1">
+						<input ref="chatTextField" className="f5 w-100 mr1" type="text" placeholder="Chat..." autoComplete="off" defaultValue="" maxLength="1000"/> 
 						<button className="w4" onClick={this.onClickSendMessage}>Send</button>
 					</form>
 				</div>
