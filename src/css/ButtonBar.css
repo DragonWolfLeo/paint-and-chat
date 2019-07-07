@@ -12,7 +12,8 @@
 	border: solid black 1px;
 }
 .buttonBar .active{
-	background: #e70000;
+	color: white;
+	background: black;
 }
 @media only screen and (min-width: 30em) {
 	.buttonBar{
