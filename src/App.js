@@ -103,7 +103,7 @@ class App extends Component {
 			<div className={`App ${connection ? "overflowHidden": ""}`}>
 				{connectionActive && connection ?
 					<React.Fragment>
-						<CanvasSpace ref="canvasSpace" connection={connection}/>
+						<CanvasSpace ref="canvasSpace" connection={connection} getChat={()=>this.refs.chat}/>
 						<Chat ref="chat" connection={connection} room={room} getCanvasSpace={()=>this.refs.canvasSpace} user={user} />
 					</React.Fragment>
 					:

@@ -42,7 +42,7 @@ const ACTIONS = Object.freeze({
 	DRAW_CANCEL: Symbol(),
 });
 
-const STARTING_CHAT_WIDTH = 350;
+const STARTING_CHAT_STATE = {width: 350, height: 0};
 const TOOLBOX_WIDTH = 80;
 
 // Control binding
@@ -111,7 +111,7 @@ class CanvasSpace extends React.Component{
 			this.distance = null;
 		}
 	}
-	chatWidth = STARTING_CHAT_WIDTH;
+	chatState = STARTING_CHAT_STATE;
 
 	// Controls
 	keyIsPressed = [];
@@ -517,6 +517,8 @@ class CanvasSpace extends React.Component{
 					tool: prevState.tool === TOOLS.COLOR_PICK ? TOOLS.DRAW : TOOLS.COLOR_PICK
 				}));
 			case BUTTONBAR_ACTIONS.CHAT:
+				const chat = this.props.getChat();
+				if(chat) chat.onChangeCollapse();
 				return;
 		}
 	}
@@ -535,7 +537,7 @@ class CanvasSpace extends React.Component{
 			toolboxWidth = desktopMode ? width : 0;
 			toolboxHeight = desktopMode ? 0 : height;
 		}
-		return [(toolboxWidth-this.chatWidth)/2, -toolboxHeight/2];
+		return [(toolboxWidth-this.chatState.width)/2, -toolboxHeight/2];
 	}
 	setBrushSize = (size, onSetBrushSizeFn) => {
 		// Clamp within range

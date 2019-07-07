@@ -52,7 +52,7 @@ class Toolbox extends React.Component {
 		const {brushSize, brushColor, brushColorAlt, onButtonBar, tool} = this.props;
 		return (
 			<div ref="element" className="toolbox black">
-				<ButtonBar onButtonBar={onButtonBar} tool={tool} />
+				<ButtonBar ref="buttonbar" onButtonBar={onButtonBar} tool={tool} />
 				<div className={"h-100-ns flex flex-wrap flex-nowrap-ns flex-column-ns overflow-y-auto-ns applightbg items-center"}>
 					<Section label="Size">
 						<div className="brushSectionContent flex flex-column-ns pl1 pl0-ns">

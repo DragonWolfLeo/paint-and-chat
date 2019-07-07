@@ -37,6 +37,7 @@
 	right: 0;
 	left: 0;
 }
+/* Desktop */
 @media only screen and (min-width: 30em) {
 	.toolbox{
 		width: 80px;

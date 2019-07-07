@@ -1,0 +1,24 @@
+@keyframes chatNotificationPulse {
+	50% { 
+		 background: #f15252; 
+		 border-color: #cc3030;
+	 }
+ }
+ @keyframes chatNotificationBounce {
+	 0% { transform: scale(0.1) }
+	 85% { transform: scale(1.1) }
+		100% { transform: scale(1) }
+ }
+ .chatNotificationIndicator{
+	 position: absolute;
+	 border-radius: 100%;
+	 background: #dd3030;
+	 border: darkred solid 2px;
+	 width: 20px;
+	 height: 20px;
+	 top: -5px;
+	 left: -5px;
+	 pointer-events: none;
+	 animation: chatNotificationPulse 5s ease-in-out 5s forwards infinite,
+		 chatNotificationBounce 0.3s ease-out 0s forwards normal;
+ }

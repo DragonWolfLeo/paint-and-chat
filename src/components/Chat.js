@@ -3,6 +3,7 @@ import '../css/Chat.css';
 import LinkedList from '../util/LinkedList';
 import ChatList from '../components/ChatList';
 import {MESSAGE_TYPES} from '../constants';
+import ChatNotificationIndicator from "./ChatNotificationIndicator";
 
 class Chat extends React.Component {
 	constructor(){
@@ -48,7 +49,7 @@ class Chat extends React.Component {
 			}
 			chatLog.append(m);
 			this.refs.chatList.queueScrollDown();
-			this.setState(newState);
+			this.setState(newState, newState.newMessage && this.sendChatNotificationToButtonBar);
 		}
 	}
 	onChangeCollapse = () => {
@@ -63,22 +64,34 @@ class Chat extends React.Component {
 			});
 		}
 		this.setState(newState,()=>{
-			this.sendChatWidthToCanvasSpace();
+			this.sendChatSizeToCanvasSpace();
+			this.sendChatNotificationToButtonBar();
 		});
 	}
-	sendChatWidthToCanvasSpace = () => {
+	sendChatSizeToCanvasSpace = () => {
 		// Send chat width to CanvasSpace
 		const {props: {getCanvasSpace}, state: {hidden}} = this;
 		const canvasSpace = getCanvasSpace && getCanvasSpace();
 		if(canvasSpace){
-			canvasSpace.chatWidth = hidden ? 0 : 350;
+			canvasSpace.chatState.width = hidden ? 0 : 350;
 		}
 	}
-	onInput = event => {
+	sendChatNotificationToButtonBar = () => {
+		// Send chat notification to buttonbar
+		const {props: {getCanvasSpace}, state: {hidden, newMessage}} = this;
+		const stack = ["buttonbar", "toolbox"];
+		let component = getCanvasSpace && getCanvasSpace();
+		// Reach buttonbar from CanvasSpace
+		while(component && stack.length){
+			component = component.refs[stack.pop()];
+		}
+		if(component && component.setChatIndicator){
+			component.setChatIndicator(hidden && newMessage ? true : false);
+		}
 	}
 	// Lifecycle hooks
 	componentDidMount() {
-		this.sendChatWidthToCanvasSpace();
+		this.sendChatSizeToCanvasSpace();
 		this.eventListenerSetup = this.props.connection.onReceiveMessageSetup(this.addMessage);
 		// Add event listeners
 		this.eventListenerSetup.add();
@@ -87,24 +100,23 @@ class Chat extends React.Component {
 		// Remove event listeners
 		if(this.eventListenerSetup) this.eventListenerSetup.remove();
 	}
+	componentDidUpdate(){
+	}
 	// Rendering
 	render(){
 		const {hidden, newMessage} = this.state;
 		return (
 			<div className={`chatContainer chat_${hidden ? "hide" : "show"}`}>
 				<div 
-					className="chatCollapseBtn appdarkbg"
+					className="chatCollapseBtn appdarkbg dn db-ns"
 					onClick={this.onChangeCollapse}
 				>
 					{hidden ? "◀" : "▶"}
-					{newMessage && hidden && (<div 
-						className="chatNotificationIndicator"
-						title="New messages"
-					></div>)}
+					<ChatNotificationIndicator visible={newMessage && hidden} />
 				</div>
 				<div className={`chat appdarkbg flex flex-column`}>
-					<div className="dib tl pa2 flex">
-						<h3 className="ma0" >{`Room: ${this.props.room}`}</h3>
+					<div className="dib tl pa2-ns pa1 flex">
+						<h3 className="ma0 f5 f4-ns" >{`Room: ${this.props.room}`}</h3>
 					</div>
 					<ChatList ref="chatList" chatArray={this.state.chatLog.toArray()} />
 					<form className="flex pv2">

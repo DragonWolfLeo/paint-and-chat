@@ -5,6 +5,7 @@
 	width: auto;
 	min-width: 24px;
 }
+/* Desktop */
 @media only screen and (min-width: 30em) {
 	.paletteColor{
 		width: 24px;
