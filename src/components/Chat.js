@@ -48,10 +48,7 @@ class Chat extends React.Component {
 				chatLog,
 			});
 		}
-		this.setState(newState,()=>{
-			this.sendChatSizeToCanvasSpace();
-			this.sendChatNotificationToButtonBar();
-		});
+		this.setState(newState,this.sendChatNotificationToButtonBar);
 	}
 	onAnimationEnd = event => {
 		this.setState({transitioning: false});
@@ -74,14 +71,6 @@ class Chat extends React.Component {
 			this.setState(newState, newState.newMessage && this.sendChatNotificationToButtonBar);
 		}
 	} 
-	sendChatSizeToCanvasSpace = () => {
-		// Send chat width to CanvasSpace
-		const {props: {getCanvasSpace}, state: {hidden}} = this;
-		const canvasSpace = getCanvasSpace && getCanvasSpace();
-		if(canvasSpace){
-			canvasSpace.chatState.width = hidden ? 0 : 350;
-		}
-	}
 	sendChatNotificationToButtonBar = () => {
 		// Send chat notification to buttonbar
 		const {props: {getCanvasSpace}, state: {hidden, newMessage}} = this;
@@ -95,9 +84,13 @@ class Chat extends React.Component {
 			component.setChatIndicator(hidden && newMessage ? true : false);
 		}
 	}
+	getChatSize = () => {
+		if(this.state.hidden) return {width: 0, height: 0};
+		const {width, height} = this.refs.chat.getBoundingClientRect();
+		return {width, height};
+	};
 	// Lifecycle hooks
 	componentDidMount() {
-		this.sendChatSizeToCanvasSpace();
 		this.eventListenerSetup = this.props.connection.onReceiveMessageSetup(this.addMessage);
 		// Add event listeners
 		this.eventListenerSetup.add();
@@ -122,7 +115,7 @@ class Chat extends React.Component {
 					{hidden ? "◀" : "▶"}
 					<ChatNotificationIndicator visible={newMessage && hidden} />
 				</div>
-				<div className={`chat appdarkbg flex flex-column`}>
+				<div ref="chat" className={`chat appdarkbg flex flex-column`}>
 					<div className="dib tl pa2-ns pa1 flex">
 						<h3 className="ma0 f5 f4-ns" >{`Room: ${this.props.room}`}</h3>
 					</div>

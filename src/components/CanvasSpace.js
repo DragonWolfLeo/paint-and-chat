@@ -42,7 +42,7 @@ const ACTIONS = Object.freeze({
 	DRAW_CANCEL: Symbol(),
 });
 
-const STARTING_CHAT_STATE = {width: 350, height: 0};
+const CHAT_WIDTH = 350;
 const TOOLBOX_WIDTH = 80;
 
 // Control binding
@@ -111,7 +111,6 @@ class CanvasSpace extends React.Component{
 			this.distance = null;
 		}
 	}
-	chatState = STARTING_CHAT_STATE;
 
 	// Controls
 	keyIsPressed = [];
@@ -525,16 +524,25 @@ class CanvasSpace extends React.Component{
 	getResetPanPosition = () =>{
 		// Determine whether on desktop or mobile
 		const desktopMode = isDesktopMode();
-		// Define lengths in case toolbox isn't available
+		// Define lengths
 		let toolboxWidth = TOOLBOX_WIDTH;
 		let toolboxHeight = 0;
+		let chatWidth = desktopMode ? CHAT_WIDTH : 0;
+		let chatHeight = 0;
+		// Get toolbox's lengths
 		if(this.refs.toolbox && this.refs.toolbox.refs.element){
-			// Set to toolbox's lengths
 			const {width, height} = this.refs.toolbox.refs.element.getBoundingClientRect();
 			toolboxWidth = desktopMode ? width : 0;
 			toolboxHeight = desktopMode ? 0 : height;
 		}
-		return [(toolboxWidth-this.chatState.width)/2, -toolboxHeight/2];
+		// Get chat's lengths
+		const chat = this.props.getChat();
+		if(chat){
+			const {width, height} = chat.getChatSize();
+			chatWidth = desktopMode ? width : 0;
+			chatHeight = desktopMode ? 0 : height;
+		}
+		return [(toolboxWidth-chatWidth)/2, -Math.max(toolboxHeight, chatHeight)/2];
 	}
 	setBrushSize = (size, onSetBrushSizeFn) => {
 		// Clamp within range
