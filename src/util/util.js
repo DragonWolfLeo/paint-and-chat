@@ -8,4 +8,10 @@ function eventListenerSetup(target, ...argsArray){
 	}, {});
 }
 
-export {eventListenerSetup};
+// Returns true if screen size is desktop mode
+const isDesktopMode = () => window.matchMedia("only screen and (min-width: 30em)").matches;
+
+export {
+	eventListenerSetup,
+	isDesktopMode,
+};

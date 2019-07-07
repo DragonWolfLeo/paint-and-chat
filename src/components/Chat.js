@@ -3,6 +3,7 @@ import '../css/Chat.css';
 import LinkedList from '../util/LinkedList';
 import ChatList from '../components/ChatList';
 import {MESSAGE_TYPES} from '../constants';
+import {isDesktopMode} from '../util/util';
 import ChatNotificationIndicator from "./ChatNotificationIndicator";
 
 class Chat extends React.Component {
@@ -10,7 +11,7 @@ class Chat extends React.Component {
 		super();
 		this.state = {
 			chatLog : new LinkedList(),
-			hidden: false,
+			hidden: isDesktopMode() ? false : true,
 			newMessage: null,
 		}
 	}

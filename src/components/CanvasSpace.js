@@ -2,7 +2,7 @@ import React from "react";
 import '../css/CanvasSpace.css';
 import Toolbox from './Toolbox';
 import BrushCursor from './BrushCursor';
-import {eventListenerSetup} from '../util/util';
+import {eventListenerSetup, isDesktopMode} from '../util/util';
 import {MIN_BRUSH_SIZE, MAX_BRUSH_SIZE, TOOLS, BUTTONBAR_ACTIONS} from '../constants';
 
 // Utility functions
@@ -527,7 +527,7 @@ class CanvasSpace extends React.Component{
 	getZoom = scale => Math.log(scale);
 	getResetPanPosition = () =>{
 		// Determine whether on desktop or mobile
-		const desktopMode = window.matchMedia("only screen and (min-width: 30em)").matches;
+		const desktopMode = isDesktopMode();
 		// Define lengths in case toolbox isn't available
 		let toolboxWidth = TOOLBOX_WIDTH;
 		let toolboxHeight = 0;

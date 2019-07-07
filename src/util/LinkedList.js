@@ -40,8 +40,8 @@ class LinkedList {
 		if(this.tail === node) this.tail = previous;
 		node.next = null;
 		node.previous = null;
-		previous.next = next;
-		next.previous = previous;
+		if(previous) previous.next = next;
+		if(next) next.previous = previous;
 		return node;
 	}
 	toArray(){
