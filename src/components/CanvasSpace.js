@@ -425,6 +425,45 @@ class CanvasSpace extends React.Component{
 			drawingCanvas.getContext("2d").clearRect(0,0,nativeWidth, nativeHeight);
 		});
 	}
+	onOpenCanvas = imagesrc => {
+		// Loading a file from user
+		const image = new Image();
+		image.src = imagesrc;
+		image.onload = () => {
+			const {width: w, height: h} = image;
+			const {nativeWidth, nativeHeight} = this.state;
+			let width = nativeWidth, height = nativeHeight;
+			const ratio = (w/h)/(nativeWidth/nativeHeight);
+			// Scale within canvas size
+			if(ratio < 1) {
+				width = nativeWidth*ratio;
+			} else {
+				height = nativeHeight/ratio;
+			}
+			// Center image
+			const offsetX = (nativeWidth-width)/2;
+			const offsetY = (nativeHeight-height)/2;
+			// Check if size is valid
+			if(width <= 0 || height <= 0) return;
+			// Blank bufferCanvas
+			const {bufferCanvas} = this.refs;
+			const eCtx = bufferCanvas.getContext("2d", {alpha: false});
+			eCtx.fillStyle="#ffffff";
+			eCtx.fillRect(0,0,nativeWidth,nativeHeight);
+			// Draw on bufferCanvas
+			eCtx.drawImage(image,0,0,w,h,offsetX,offsetY,width,height);
+			// Convert bufferCanvas to blob
+			bufferCanvas.toBlob(blob=>{
+				this.props.connection.sendCanvas({
+					blob,
+					x: 0,
+					y: 0,
+					width: nativeWidth,
+					height: nativeHeight,
+				});
+			});
+		}
+	}
 	onReceiveCanvas = data => {
 		if(!data){
 			return console.error("Error: No data received");
@@ -508,6 +547,21 @@ class CanvasSpace extends React.Component{
 			default: return;
 			case BUTTONBAR_ACTIONS.SAVE:
 				return this.saveCanvas();
+			case BUTTONBAR_ACTIONS.OPEN:
+				const fileInput = document.createElement("input");
+				fileInput.setAttribute("type", "file");
+				fileInput.setAttribute("accept", ".png");
+				fileInput.click();
+				fileInput.onchange=({target}) => {
+					const files = target.files
+					if (files && files[0] && files[0].type === "image/png") {
+						// Read image files
+						const reader = new FileReader();
+						reader.onload = event => this.onOpenCanvas(event.target.result);
+						reader.readAsDataURL(target.files[0]);
+					}
+				}
+				return;
 			case BUTTONBAR_ACTIONS.COLOR_PICK:
 				return this.setState(prevState=>({
 					tool: prevState.tool === TOOLS.COLOR_PICK ? TOOLS.DRAW : TOOLS.COLOR_PICK
