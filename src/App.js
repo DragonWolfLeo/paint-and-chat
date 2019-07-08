@@ -89,7 +89,8 @@ class App extends Component {
 			window.sessionStorage.setItem("token", token);
 		});
 		connection.onDisconnect(()=>{
-			this.setState({connectionActive: false, connection: null});
+			if(this.refs.chat)
+				this.refs.chat.addMessage("Lost connection to server. Please save your work before reconnecting.");
 		});
 		this.setState({connection},()=>setHash(room));
 	}
@@ -100,7 +101,7 @@ class App extends Component {
 		const {connection, connectionActive, user, room, awaiting} = this.state;
 		return (
 			<div className={`App ${connection ? "overflowHidden": ""}`}>
-				{connectionActive && connection ?
+				{!awaiting && connectionActive && connection ?
 					<React.Fragment>
 						<CanvasSpace ref="canvasSpace" connection={connection} getChat={()=>this.refs.chat}/>
 						<Chat ref="chat" connection={connection} room={room} getCanvasSpace={()=>this.refs.canvasSpace} user={user} />
