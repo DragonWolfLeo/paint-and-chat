@@ -2,6 +2,7 @@ import React from "react";
 import '../css/CanvasSpace.css';
 import Toolbox from './Toolbox';
 import BrushCursor from './BrushCursor';
+import Dialog from "./Dialog";
 import {eventListenerSetup, isDesktopMode} from '../util/util';
 import {MIN_BRUSH_SIZE, MAX_BRUSH_SIZE, TOOLS, BUTTONBAR_ACTIONS} from '../constants';
 
@@ -542,7 +543,7 @@ class CanvasSpace extends React.Component{
 		}
 	}
 	// Button bar
-	onButtonBar = type => {
+	onButtonBar = (type, options) => {
 		switch(type){
 			default: return;
 			case BUTTONBAR_ACTIONS.SAVE:
@@ -570,6 +571,9 @@ class CanvasSpace extends React.Component{
 				const chat = this.props.getChat();
 				if(chat) chat.onChangeCollapse();
 				return;
+			case BUTTONBAR_ACTIONS.RESIZE:
+				const {resizeDialog} = this.refs;
+				return resizeDialog && resizeDialog.activate();
 		}
 	}
 	// Other functions
@@ -669,6 +673,13 @@ class CanvasSpace extends React.Component{
 		// Deactivate draw and erase
 		this.deactivateControl(ACTIONS.DRAW, event);
 		this.deactivateControl(ACTIONS.ERASE, event);
+	}
+	setCanvasSize = (cb, width, height) => {
+		this.props.connection.resizeCanvas({
+			width,
+			height,
+		});
+		cb();
 	}
 	// Lifecycle hooks
 	componentDidMount(){
@@ -774,6 +785,23 @@ class CanvasSpace extends React.Component{
 					<canvas className="dn" ref="exportCanvas"/>
 					<canvas className="dn" ref="saveCanvas"/>
 				</div>
+				{<Dialog
+					ref="resizeDialog"
+					title="Resize Canvas"
+					inputs={[
+						{
+							target: "width",
+							title: "Width",
+							initial: nativeWidth,
+						},
+						{
+							target: "height",
+							title: "Height",
+							initial: nativeHeight,
+						}
+					]}
+					onAccept={this.setCanvasSize}
+				/>}
 			</div>
 		);
 	}

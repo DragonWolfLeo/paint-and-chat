@@ -12,7 +12,7 @@ class Connection {
     }
     // Adding event listeners
     onConnect = cb => {
-        this.socket.on("connect", cb);
+        this.socket.once("connect", cb);
         // Authenticate
         this.socket.emit("auth", this.token);
     };
@@ -37,6 +37,7 @@ class Connection {
         this.socket.emit("message", text);
     };
     sendCanvas = data => this.socket.emit("canvas", data);
+    resizeCanvas = data => this.socket.emit("resize", data);
 
     // Disconnecting
     disconnect = () => this.socket.disconnect();

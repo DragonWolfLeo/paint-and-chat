@@ -33,6 +33,12 @@ class ButtonBar extends React.Component{
 						<ion-icon name="md-open" size="large"/>
 					</button>
 					<button 
+						title="Resize" 
+						onClick={()=>onButtonBar(BUTTONBAR_ACTIONS.RESIZE)}
+					>
+						<ion-icon name="md-expand" size="large"/>
+					</button>
+					<button 
 						title="Pick Color" 
 						onClick={()=>onButtonBar(BUTTONBAR_ACTIONS.COLOR_PICK)}
 						className={tool === TOOLS.COLOR_PICK ? "active" : ""}

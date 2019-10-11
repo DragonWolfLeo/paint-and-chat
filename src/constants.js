@@ -23,6 +23,7 @@ const BUTTONBAR_ACTIONS = Object.freeze({
 	COLOR_PICK: Symbol(),
 	CHAT: Symbol(),
 	OPEN: Symbol(),
+	RESIZE: Symbol(),
 });
 
 export {
